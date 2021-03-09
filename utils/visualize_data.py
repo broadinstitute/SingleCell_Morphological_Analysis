@@ -68,6 +68,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
     axes[1].set_ylabel('Histogram');axes[1].set_xlabel('cell category index');
     axes[0].legend();axes[1].legend();
     plt.tight_layout()
+    os.system("mkdir -p "+resultsDir+'/'+contLabel+'-'+d1);
     fig.savefig(resultsDir+'/'+contLabel+'-'+d1+'/clusterDensity'+saveFormat)  
 
     meanWT=wtANDmtDf_scaled.loc[wtANDmtDf_scaled['label'] == contLabel,feats2use].mean()
@@ -89,7 +90,8 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
             nSampleSCs=6
             if clusterDF.shape[0]> nSampleSCs:
                 samples2plot=clusterDF.sort_values('dist2Mean',ascending=True).sample(nSampleSCs).reset_index(drop=True)
-                f=visualize_n_SingleCell(compartments,samples2plot,boxSize)
+                title_str="Cluster "+str(c)
+                f=visualize_n_SingleCell(compartments,samples2plot,boxSize,title=title_str)
                 f.savefig(resultsDir+'/'+contLabel+'-'+d1+'/cluster'+str(c)+'_examplar'+saveFormat)     
                 plt.close('all')    
                 
@@ -99,7 +101,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
 
 
 
-def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
+def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
     """ 
     This function plots the single cells correspoding to the input single cell dataframe
   
@@ -113,7 +115,9 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
           "URL_CellOutlines" column of input dataframe, therefore, check that the addresses are correct
            before inputing them to the function, and if not, modify before input!
        
-    boxSize (int): Height or Width of the square bounding box
+    ++ boxSize (int): Height or Width of the square bounding box
+    
+    ++ title
     
     Returns: 
     f (object): handle to the figure
@@ -125,32 +129,46 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
     
     import skimage.io
     f, axarr = plt.subplots(dfWithWTlabels.shape[0], len(channels),figsize=(len(channels)*2,dfWithWTlabels.shape[0]*2));
-#     f.suptitle('Transfected: '+str(gfpTag))
+    if len(title)>0:
+        print(title)
+        f.suptitle(title);
+    
     f.subplots_adjust(hspace=0, wspace=0)
 
 
     maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
     for index in range(dfWithWTlabels.shape[0]):
+               
+        compressed=True
+        if compressed:
+            xCenter0=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
+            yCenter0=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])            
+            compressed_im_size=1080;
+            original_im_size=2160;
+            compRatio=(compressed_im_size/original_im_size);
+            xCenter,yCenter=int(xCenter0*compRatio),\
+            int(yCenter0*compRatio)  
+        else:
+            xCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
+            yCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])            
         
-        xCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
-        yCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])
         
         cpi=0;
         for c in channels:
             if c=='Outline':
                 imPath=dfWithWTlabels.loc[index,'URL_CellOutlines'];
             else:
-                ch_D=dfWithWTlabels.loc[index,'Image_FileName_Orig'+c];
-#                 ch_D=dfWithWTlabels.loc[index,'FileName_Orig'+c];
+#                 ch_D=dfWithWTlabels.loc[index,'Image_FileName_Orig'+c];
+                ch_D=dfWithWTlabels.loc[index,'FileName_Orig'+c];
 #                 print(ch_D)
     #         imageDir=imDir+subjectID+' Mito_Morphology/'
-                imageDir=dfWithWTlabels.loc[index,'Image_PathName_Orig'+c]+'/'
-#                 imageDir=dfWithWTlabels.loc[index,'PathName_Orig'+c]+'/'
+#                 imageDir=dfWithWTlabels.loc[index,'Image_PathName_Orig'+c]+'/'
+                imageDir=dfWithWTlabels.loc[index,'PathName_Orig'+c]+'/'
                 imPath=imageDir+ch_D
             
             imD=skimage.io.imread(imPath)[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
-            axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
-#             axarr[index,cpi].imshow(imD,cmap='gray');axarr[0,cpi].set_title(c);
+#             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
+            axarr[index,cpi].imshow(imD,cmap='gray');axarr[0,cpi].set_title(c);
             cpi+=1        
 
 #         Well=dfWithWTlabels.loc[index,'Metadata_Well']
@@ -160,8 +178,9 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
             
             
 #         subjectID=dfWithWTlabels.loc[index,'subject']
-#         imylabel=dfWithWTlabels.label[index]+'\n'+subjectID
-#         axarr[index,0].set_ylabel(imylabel);
+        imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
+        imylabel2="-".join(imylabel.split('-')[0:2])
+        axarr[index,0].set_ylabel(imylabel2);
 # #     plt.tight_layout() 
 
     for i in range(len(channels)):
@@ -170,7 +189,7 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
             axarr[j,i].yaxis.set_major_locator(plt.NullLocator())
             axarr[j,i].set_aspect('auto')
     
-    return 
+    return f
 
 
 

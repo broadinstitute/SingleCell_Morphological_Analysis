@@ -236,6 +236,17 @@ def edgeCellFilter(df_1):
     return df_1_centCells,borderLength
 
 
+
+########################function to remove cells on the border
+def edgeCellFilter2(df_1,imgSize,borderLength):   
+
+    df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-borderLength)) | \
+                              (df_1['Nuclei_Location_Center_X']<(borderLength))\
+                            | (df_1['Nuclei_Location_Center_Y']>(imgSize-borderLength)) | \
+                              (df_1['Nuclei_Location_Center_Y']<(borderLength))),:].reset_index(drop=True)
+    return df_1_centCells
+
+
 # def edgeCellFilter(df_1):   
 #     # remove cells on the border
 # #     imgSize=1080
