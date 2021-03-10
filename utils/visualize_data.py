@@ -27,7 +27,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
 #     DirsDict['imDir']=rootDir+"Mito_Morphology_input/images/"
     
     
-    d1=d.split(" ")[0]
+#     d1=d.split(" ")[0]
     saveFormat='.png';#'.png'
 #     plt.ioff()
     fig, axes = plt.subplots(1,2)
@@ -68,8 +68,8 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
     axes[1].set_ylabel('Histogram');axes[1].set_xlabel('cell category index');
     axes[0].legend();axes[1].legend();
     plt.tight_layout()
-    os.system("mkdir -p "+resultsDir+'/'+contLabel+'-'+d1);
-    fig.savefig(resultsDir+'/'+contLabel+'-'+d1+'/clusterDensity'+saveFormat)  
+    os.system("mkdir -p "+resultsDir);
+    fig.savefig(resultsDir+'/clusterDensity'+saveFormat)  
 
     meanWT=wtANDmtDf_scaled.loc[wtANDmtDf_scaled['label'] == contLabel,feats2use].mean()
 
@@ -85,18 +85,17 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
             sns.barplot(x='Diff', y=absFeatureImportanceSS.index, data=absFeatureImportanceSS,ax=axes)
             sns.despine()
             plt.tight_layout()   
-            fig.savefig(resultsDir+'/'+contLabel+'-'+d1+'/cluster'+str(c)+'_barImpFeatures'+saveFormat)  
+            fig.savefig(resultsDir+'/cluster'+str(c)+'_barImpFeatures'+saveFormat)  
             plt.close('all')
             nSampleSCs=6
             if clusterDF.shape[0]> nSampleSCs:
                 samples2plot=clusterDF.sort_values('dist2Mean',ascending=True).sample(nSampleSCs).reset_index(drop=True)
                 title_str="Cluster "+str(c)
                 f=visualize_n_SingleCell(compartments,samples2plot,boxSize,title=title_str)
-                f.savefig(resultsDir+'/'+contLabel+'-'+d1+'/cluster'+str(c)+'_examplar'+saveFormat)     
+                f.savefig(resultsDir+'/cluster'+str(c)+'_examplar'+saveFormat)     
                 plt.close('all')    
                 
     return
-
 
 
 
@@ -136,7 +135,8 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
     f.subplots_adjust(hspace=0, wspace=0)
 
 
-    maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
+#     maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
+#     print(dfWithWTlabels.shape[0])
     for index in range(dfWithWTlabels.shape[0]):
                
         compressed=True
@@ -152,6 +152,7 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
             xCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
             yCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])            
         
+#         print(xCenter,yCenter)
         
         cpi=0;
         for c in channels:
@@ -165,6 +166,7 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
 #                 imageDir=dfWithWTlabels.loc[index,'Image_PathName_Orig'+c]+'/'
                 imageDir=dfWithWTlabels.loc[index,'PathName_Orig'+c]+'/'
                 imPath=imageDir+ch_D
+        
             
             imD=skimage.io.imread(imPath)[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
@@ -175,13 +177,13 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
 #         Site=str(dfWithWTlabels.loc[index,'Metadata_Site'])
 #         imylabel=Well+'\n'+Site
 #         axarr[index,0].set_ylabel(imylabel);            
-            
-            
-#         subjectID=dfWithWTlabels.loc[index,'subject']
-        imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
-        imylabel2="-".join(imylabel.split('-')[0:2])
-        axarr[index,0].set_ylabel(imylabel2);
-# #     plt.tight_layout() 
+    #         subjectID=dfWithWTlabels.loc[index,'subject']
+    
+        if "label" in dfWithWTlabels.columns.tolist():
+            imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
+            imylabel2="-".join(imylabel.split('-')[0:2])
+            axarr[index,0].set_ylabel(imylabel2);
+    # #     plt.tight_layout() 
 
     for i in range(len(channels)):
         for j in range(dfWithWTlabels.shape[0]):

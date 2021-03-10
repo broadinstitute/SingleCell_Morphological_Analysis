@@ -418,8 +418,8 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 #        'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09',\
 #        'G10', 'G11', 'G12', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',\
 #        'H07', 'H08', 'H09', 'H10', 'H11', 'H12'];
-#     meta_well_col_str="Image_Metadata_Well"
-    meta_well_col_str="Metadata_Well"
+    meta_well_col_str="Image_Metadata_Well"
+#     meta_well_col_str="Metadata_Well"
 
     sql_file="sqlite:////"+fileName
     engine = create_engine(sql_file)
