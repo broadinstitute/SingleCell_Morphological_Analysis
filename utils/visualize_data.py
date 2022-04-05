@@ -8,15 +8,14 @@ import numpy as np
 import seaborn as sns
 from sklearn import preprocessing
 import pickle
-from sklearn import preprocessing
 from sklearn.feature_selection import mutual_info_regression
-from imblearn.over_sampling import SMOTE,RandomOverSampler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score,confusion_matrix
+# from imblearn.over_sampling import SMOTE,RandomOverSampler
+# from sklearn.model_selection import train_test_split
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.metrics import accuracy_score,confusion_matrix
 import matplotlib.pyplot as plt
-from imblearn.over_sampling import SMOTE,RandomOverSampler
+# from imblearn.over_sampling import SMOTE,RandomOverSampler
 import os
 from functools import reduce
 import skimage
@@ -100,6 +99,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
 
 
 
+
 def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
     """ 
     This function plots the single cells correspoding to the input single cell dataframe
@@ -135,8 +135,7 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
     f.subplots_adjust(hspace=0, wspace=0)
 
 
-#     maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
-#     print(dfWithWTlabels.shape[0])
+    maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
     for index in range(dfWithWTlabels.shape[0]):
                
         compressed=True
@@ -152,7 +151,6 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
             xCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
             yCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])            
         
-#         print(xCenter,yCenter)
         
         cpi=0;
         for c in channels:
@@ -166,7 +164,6 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
 #                 imageDir=dfWithWTlabels.loc[index,'Image_PathName_Orig'+c]+'/'
                 imageDir=dfWithWTlabels.loc[index,'PathName_Orig'+c]+'/'
                 imPath=imageDir+ch_D
-        
             
             imD=skimage.io.imread(imPath)[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
@@ -177,13 +174,13 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
 #         Site=str(dfWithWTlabels.loc[index,'Metadata_Site'])
 #         imylabel=Well+'\n'+Site
 #         axarr[index,0].set_ylabel(imylabel);            
-    #         subjectID=dfWithWTlabels.loc[index,'subject']
-    
-        if "label" in dfWithWTlabels.columns.tolist():
-            imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
-            imylabel2="-".join(imylabel.split('-')[0:2])
-            axarr[index,0].set_ylabel(imylabel2);
-    # #     plt.tight_layout() 
+            
+            
+#         subjectID=dfWithWTlabels.loc[index,'subject']
+#         imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
+#         imylabel2="-".join(imylabel.split('-')[0:2])
+#         axarr[index,0].set_ylabel(imylabel2);
+# #     plt.tight_layout() 
 
     for i in range(len(channels)):
         for j in range(dfWithWTlabels.shape[0]):
