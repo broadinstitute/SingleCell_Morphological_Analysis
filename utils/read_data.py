@@ -37,6 +37,39 @@ def extract_feature_names(df_input):
 
     return cp_features, cp_features_analysis
 
+################################################################################
+def handle_nans(df_input):
+    """
+    from the all df_input columns extract cell painting measurments 
+    the measurments that should be used for analysis
+    
+    Inputs:
+    df_input: dataframes with all the annotations available in the raw data
+    
+    Outputs: cp_features, cp_features_analysis
+    
+    """
+    
+    cp_features=df_input.columns[df_input.columns.str.contains("Cells_|Cytoplasm_|Nuclei_")].tolist()
+
+
+    null_vals_ratio=0.05; thrsh_std=0.0001;
+    cols2remove_manyNulls=[i for i in cp_features if (df_input[i].isnull().sum(axis=0)/df_input.shape[0])\
+                  >null_vals_ratio]   
+    cols2remove_lowVars = df_input[cp_features].std()[df_input[cp_features].std() < thrsh_std].index.tolist()
+
+    cols2removeCP = cols2remove_manyNulls + cols2remove_lowVars
+#     print(cols2removeCP)
+
+    cp_features_analysis = list(set(cp_features) - set(cols2removeCP))
+    df_p_s=df_input.drop(cols2removeCP, axis=1);
+    
+    df_p_s[cp_features_analysis] = df_p_s[cp_features_analysis].interpolate()    
+    
+    
+    return df_p_s, cp_features_analysis
+
+
 
 ################################################################################
 
@@ -284,7 +317,7 @@ def readSingleCellData_sqlalch_concat(fileName):
 
 
 
-def readSingleCellData_sqlalch_well_subset(fileName,wells):
+def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
     import pandas as pd
     from sqlalchemy import create_engine
     from functools import reduce
@@ -302,7 +335,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 #        'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09',\
 #        'G10', 'G11', 'G12', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',\
 #        'H07', 'H08', 'H09', 'H10', 'H11', 'H12'];
-    meta_well_col_str="Image_Metadata_Well"
+#     meta_well_col_str="Image_Metadata_Well"
 #     meta_well_col_str="Metadata_Well"
 
     sql_file="sqlite:////"+fileName
@@ -335,9 +368,9 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 #     print(plateImageDf.columns[plateImageDf.columns.str.contains("Metadata_")])
 #     print(plateImageDf['Metadata_Well'].unique())
     end1 = time.time()
-    print('time elapsed:',(end1 - start1)/60)
+#     print('time elapsed:',(end1 - start1)/60)
     img_nums=plateImageDf.ImageNumber.unique().tolist()
-    print(plateImageDf.shape,img_nums)
+#     print(plateImageDf.shape,img_nums)
     list_str2="("
     for i in img_nums:
         list_str2=list_str2+str(i)+',' 
@@ -352,7 +385,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 
     plateDf = reduce(lambda left,right: pd.merge(left,right,on=["TableNumber", "ImageNumber", "ObjectNumber"]), plateDf_list)
     end = time.time()
-    print('time elapsed:',(end - start2)/60)
+#     print('time elapsed:',(end - start2)/60)
     
 #     print(plateDf.columns[plateDf.columns.str.contains("Metadata_")])
     plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])
