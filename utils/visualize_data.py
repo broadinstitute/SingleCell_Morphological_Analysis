@@ -8,15 +8,14 @@ import numpy as np
 import seaborn as sns
 from sklearn import preprocessing
 import pickle
-from sklearn import preprocessing
 from sklearn.feature_selection import mutual_info_regression
-from imblearn.over_sampling import SMOTE,RandomOverSampler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score,confusion_matrix
+# from imblearn.over_sampling import SMOTE,RandomOverSampler
+# from sklearn.model_selection import train_test_split
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.metrics import accuracy_score,confusion_matrix
 import matplotlib.pyplot as plt
-from imblearn.over_sampling import SMOTE,RandomOverSampler
+# from imblearn.over_sampling import SMOTE,RandomOverSampler
 import os
 from functools import reduce
 import skimage
@@ -178,9 +177,9 @@ def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize,title=""):
             
             
 #         subjectID=dfWithWTlabels.loc[index,'subject']
-        imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
-        imylabel2="-".join(imylabel.split('-')[0:2])
-        axarr[index,0].set_ylabel(imylabel2);
+#         imylabel=dfWithWTlabels.label[index]#+'\n'+subjectID
+#         imylabel2="-".join(imylabel.split('-')[0:2])
+#         axarr[index,0].set_ylabel(imylabel2);
 # #     plt.tight_layout() 
 
     for i in range(len(channels)):

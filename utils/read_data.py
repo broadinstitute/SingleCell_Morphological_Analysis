@@ -8,15 +8,7 @@ import numpy as np
 import seaborn as sns
 from sklearn import preprocessing
 import pickle
-from sklearn import preprocessing
-from sklearn.feature_selection import mutual_info_regression
-from imblearn.over_sampling import SMOTE,RandomOverSampler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score,confusion_matrix
 import matplotlib.pyplot as plt
-from imblearn.over_sampling import SMOTE,RandomOverSampler
 import os
 import time
 
@@ -24,137 +16,29 @@ import pandas as pd
 from sqlalchemy import create_engine
 from functools import reduce
 
-def balanceLeaveOneCloneOutCV(model,dataScaled,labels,groupsNum):
-    # 
-    from sklearn.model_selection import LeaveOneGroupOut
-    from sklearn.metrics import roc_auc_score
-    acc=[]
-    predLabels=[]; #np.zeros((labels.shape[0]), dtype=bool)
-    trueLabels=[];
-    predProbs=[];
-    trueLabelConf=[];
-    i=0;
-    logo = LeaveOneGroupOut()
-    acc2=[]
-    featureImportanceListofLists=[]
-    abundance=[]
-    for train_index, test_index in logo.split(dataScaled, labels, groupsNum):
-    #         print("TRAIN:", train_index, "TEST:", test_index)        
-        leftOutClone=groupsNum[test_index]
-        X_train, X_test = dataScaled[train_index], dataScaled[test_index]        
-        y_train, y_test = labels[train_index], labels[test_index]
-#         sm = SMOTE()
-        sm=RandomOverSampler()
-#         print(i,X_train.shape,y_train.shape)
 
-        data_res_train, labels_res_train = sm.fit_sample(X_train, y_train)
-#         print(i,data_res_train.shape,labels_res_train.shape)
-
-        model.fit(data_res_train, labels_res_train) 
-        importances = model.feature_importances_
-        indicesRF = np.argsort(importances)[::-1]
-        topXfs=indicesRF[0:10]
-#         print(np.count_nonzero(labels_res_train==True),len(labels_res_train))
-        y_model = model.predict(X_test);
-        prob_model=model.predict_proba(X_test)
-        accuracy=accuracy_score(y_test, y_model)
-        trueLabelConf0=[prob_model[i][y_test[i]] for i in range(len(y_test))];
-#         accuracy=roc_auc_score(y_test, model.predict_proba(X_test))
-#         accuracy=model.score(X_test,y_test)
-
-        if accuracy>.65:
-            featureImportanceListofLists.append(topXfs)
-        acc.append(accuracy);
-        acc2.append(str(leftOutClone[0])+':'+str(np.round(accuracy*100,2)));
-#         leftOtClone
-        trueLabels+=y_test.tolist();
-        predLabels+=y_model.tolist();
-        trueLabelConf+=trueLabelConf0;
-#         predProbs+=prob_model.tolist();
-#         print(trueLabelConf0,(np.sum(np.array(trueLabelConf0)>=0.95),np.sum((np.array(trueLabelConf0)>=0.95) |(np.array(trueLabelConf0)<=0.05))))
-#         abnd=(np.sum(np.array(trueLabelConf0)>=0.95)/np.sum((np.array(trueLabelConf0)>=0.95) |(np.array(trueLabelConf0)<=0.05)))
-#         abundance+=[abnd];
-    topXfeats = set(featureImportanceListofLists[0])
-    for s in featureImportanceListofLists[1:]:
-        topXfeats.intersection_update(s)
-    return np.mean(acc),trueLabels,predLabels,acc2,trueLabelConf,topXfeats
-
-
-
-
-
-
-
-def visualize_n_SingleCell(channels,dfWithWTlabels,boxSize):
-    """ 
-    This function plots the single cells correspoding to the input single cell dataframe
-  
-    Inputs: 
-    ++ dfWithWTlabels   (pandas df) size --> (number of single cells)x(columns): 
-    input dataframe contains single cells profiles as rows (make sure it has "Nuclei_Location_Center_X"or"Y" columns)
+################################################################################
+def extract_feature_names(df_input):
+    """
+    from the all df_input columns extract cell painting measurments 
+    the measurments that should be used for analysis
     
-    ++ channels (dtype: list): list of channels to be displayed as columns of output image
-           example: channels=['Mito','AGP','Brightfield','ER','DNA','Outline']
-        * If Outline exist in the list of channels; function reads the outline image address from 
-          "URL_CellOutlines" column of input dataframe, therefore, check that the addresses are correct
-           before inputing them to the function, and if not, modify before input!
-       
-    boxSize (int): Height or Width of the square bounding box
+    Inputs:
+    df_input: dataframes with all the annotations available in the raw data
     
-    Returns: 
-    f (object): handle to the figure
-  
+    Outputs: cp_features, cp_features_analysis
+    
     """
     
-    halfBoxSize=int(boxSize/2);
-#     print(channels)
-    
-    import skimage.io
-    f, axarr = plt.subplots(dfWithWTlabels.shape[0], len(channels),figsize=(len(channels)*2,dfWithWTlabels.shape[0]*2));
-#     f.suptitle('Transfected: '+str(gfpTag))
-    f.subplots_adjust(hspace=0, wspace=0)
+    cp_features=df_input.columns[df_input.columns.str.contains("Cells_|Cytoplasm_|Nuclei_")].tolist()
+    locFeature2beremoved=list(filter(lambda x: "_X" in x or "_Y" in x , cp_features)) 
+    corFeature2beremoved=list(filter(lambda x: "Correlation" in x , cp_features)) 
+    cp_features_analysis=list(set(cp_features)-set(locFeature2beremoved)-set(corFeature2beremoved))
+
+    return cp_features, cp_features_analysis
 
 
-    maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
-    for index in range(dfWithWTlabels.shape[0]):
-        
-        xCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_X'])
-        yCenter=int(dfWithWTlabels.loc[index,'Nuclei_Location_Center_Y'])
-        
-        cpi=0;
-        for c in channels:
-            if c=='Outline':
-                imPath=dfWithWTlabels.loc[index,'URL_CellOutlines'];
-            else:
-                ch_D=dfWithWTlabels.loc[index,'Image_FileName_Orig'+c];
-#                 print(ch_D)
-    #         imageDir=imDir+subjectID+' Mito_Morphology/'
-                imageDir=dfWithWTlabels.loc[index,'Image_PathName_Orig'+c]+'/'
-                imPath=imageDir+ch_D
-            
-            imD=skimage.io.imread(imPath)[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
-            axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
-#             axarr[index,cpi].imshow(imD,cmap='gray');axarr[0,cpi].set_title(c);
-            cpi+=1        
-
-#         Well=dfWithWTlabels.loc[index,'Metadata_Well']
-#         Site=str(dfWithWTlabels.loc[index,'Metadata_Site'])
-#         imylabel=Well+'\n'+Site
-#         axarr[index,0].set_ylabel(imylabel);            
-            
-            
-#         subjectID=dfWithWTlabels.loc[index,'subject']
-#         imylabel=dfWithWTlabels.label[index]+'\n'+subjectID
-#         axarr[index,0].set_ylabel(imylabel);
-# #     plt.tight_layout() 
-
-    for i in range(len(channels)):
-        for j in range(dfWithWTlabels.shape[0]):
-            axarr[j,i].xaxis.set_major_locator(plt.NullLocator())
-            axarr[j,i].yaxis.set_major_locator(plt.NullLocator())
-            axarr[j,i].set_aspect('auto')
-    
-    return 
+################################################################################
 
 def readSingleCellData_r(fileName):
     import rpy2.robjects as robjects
@@ -418,7 +302,11 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
 #        'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09',\
 #        'G10', 'G11', 'G12', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',\
 #        'H07', 'H08', 'H09', 'H10', 'H11', 'H12'];
+<<<<<<< HEAD
 #     meta_well_col_str="Image_Metadata_Well"
+=======
+    meta_well_col_str="Image_Metadata_Well"
+>>>>>>> c092b1cdc8156f6bbc4a8a57cd3de230a576d110
 #     meta_well_col_str="Metadata_Well"
 
     sql_file="sqlite:////"+fileName
