@@ -27,7 +27,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
 #     DirsDict['imDir']=rootDir+"Mito_Morphology_input/images/"
     
     
-    d1=d.split(" ")[0]
+#     d1=d.split(" ")[0]
     saveFormat='.png';#'.png'
 #     plt.ioff()
     fig, axes = plt.subplots(1,2)
@@ -68,8 +68,8 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
     axes[1].set_ylabel('Histogram');axes[1].set_xlabel('cell category index');
     axes[0].legend();axes[1].legend();
     plt.tight_layout()
-    os.system("mkdir -p "+resultsDir+'/'+contLabel+'-'+d1);
-    fig.savefig(resultsDir+'/'+contLabel+'-'+d1+'/clusterDensity'+saveFormat)  
+    os.system("mkdir -p "+resultsDir);
+    fig.savefig(resultsDir+'/clusterDensity'+saveFormat)  
 
     meanWT=wtANDmtDf_scaled.loc[wtANDmtDf_scaled['label'] == contLabel,feats2use].mean()
 
@@ -85,14 +85,14 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
             sns.barplot(x='Diff', y=absFeatureImportanceSS.index, data=absFeatureImportanceSS,ax=axes)
             sns.despine()
             plt.tight_layout()   
-            fig.savefig(resultsDir+'/'+contLabel+'-'+d1+'/cluster'+str(c)+'_barImpFeatures'+saveFormat)  
+            fig.savefig(resultsDir+'/cluster'+str(c)+'_barImpFeatures'+saveFormat)  
             plt.close('all')
             nSampleSCs=6
             if clusterDF.shape[0]> nSampleSCs:
                 samples2plot=clusterDF.sort_values('dist2Mean',ascending=True).sample(nSampleSCs).reset_index(drop=True)
                 title_str="Cluster "+str(c)
                 f=visualize_n_SingleCell(compartments,samples2plot,boxSize,title=title_str)
-                f.savefig(resultsDir+'/'+contLabel+'-'+d1+'/cluster'+str(c)+'_examplar'+saveFormat)     
+                f.savefig(resultsDir+'/cluster'+str(c)+'_examplar'+saveFormat)     
                 plt.close('all')    
                 
     return

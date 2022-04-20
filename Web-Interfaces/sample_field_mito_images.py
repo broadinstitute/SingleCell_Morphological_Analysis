@@ -14,12 +14,13 @@ Use the following command on your machine by executing:
 
     $ cd ~/workspace_rosetta/workspace/software/2018_04_20_Rosetta
     $ bokeh serve sample_field_mito_images.py --allow-websocket-origin=ec2-54-90-165-206.compute-1.amazonaws.com:8181 --port 8181
-
+# bokeh serve sample_field_mito_images.py --allow-websocket-origin=ec2-54-164-178-213.compute-1.amazonaws.com:8181 --port 8181
 
 
 Then navigate to the URL:
 
     http://ec2-54-90-165-206.compute-1.amazonaws.com:8181/sample_field_mito_images
+    http://ec2-54-164-178-213.compute-1.amazonaws.com:8181/sample_field_mito_images
 
 .. 
 

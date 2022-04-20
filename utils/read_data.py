@@ -400,7 +400,7 @@ def readSingleCellData_sqlalch_concat(fileName):
 
 
 
-def readSingleCellData_sqlalch_well_subset(fileName,wells):
+def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
     import pandas as pd
     from sqlalchemy import create_engine
     from functools import reduce
@@ -419,7 +419,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 #        'G10', 'G11', 'G12', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',\
 #        'H07', 'H08', 'H09', 'H10', 'H11', 'H12'];
 #     meta_well_col_str="Image_Metadata_Well"
-    meta_well_col_str="Metadata_Well"
+#     meta_well_col_str="Metadata_Well"
 
     sql_file="sqlite:////"+fileName
     engine = create_engine(sql_file)
@@ -451,9 +451,9 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 #     print(plateImageDf.columns[plateImageDf.columns.str.contains("Metadata_")])
 #     print(plateImageDf['Metadata_Well'].unique())
     end1 = time.time()
-    print('time elapsed:',(end1 - start1)/60)
+#     print('time elapsed:',(end1 - start1)/60)
     img_nums=plateImageDf.ImageNumber.unique().tolist()
-    print(plateImageDf.shape,img_nums)
+#     print(plateImageDf.shape,img_nums)
     list_str2="("
     for i in img_nums:
         list_str2=list_str2+str(i)+',' 
@@ -468,7 +468,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells):
 
     plateDf = reduce(lambda left,right: pd.merge(left,right,on=["TableNumber", "ImageNumber", "ObjectNumber"]), plateDf_list)
     end = time.time()
-    print('time elapsed:',(end - start2)/60)
+#     print('time elapsed:',(end - start2)/60)
     
 #     print(plateDf.columns[plateDf.columns.str.contains("Metadata_")])
     plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])
@@ -667,9 +667,7 @@ def readSingleCellData_sqlalch_FeatureAndWell_subset(fileName,selected_feature,w
     
 #     readSingleCellData_sqlalch_well_subset(fileName,wells):
     
-    
-    
-    
-    
+
+ 
     
     
