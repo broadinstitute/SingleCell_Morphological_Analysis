@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 # from imblearn.over_sampling import SMOTE,RandomOverSampler
 import os
 from functools import reduce
+from sklearn.cluster import KMeans
 import skimage
 from utils.read_data import *
 
@@ -56,7 +57,7 @@ def extract_single_cell_samples(df_p_s,n_cells,cell_selection_method):
 
     elif cell_selection_method=='representative': 
         n_cells_in_each_cluster_unif=30
-        n_clusts=int(df_p_s0.shape[0]/n_cells_in_each_cluster_unif) 
+        n_clusts=int(df_p_s.shape[0]/n_cells_in_each_cluster_unif) 
         kmeans = KMeans(n_clusters=n_clusts).fit(df_p_s[cp_features_analysis].values)
         clusterLabels=kmeans.labels_
         df_p_s['clusterLabels']=clusterLabels;
@@ -82,12 +83,30 @@ def extract_single_cell_samples(df_p_s,n_cells,cell_selection_method):
         df_p_s_gm2=df_p_s.loc[gm2_sample_ind,:]
         dff=pd.concat([df_p_s_gm2,df_p_s_gm2],ignore_index=True)
         
-    return dff
+    return dff,cp_features_analysis
 
 
 
-def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compartments,boxSize):
-    rootDir=DirsDict['root']
+def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compartments,boxSize,pooled=False):
+    """ 
+    This function select cells based on input cell_selection_method
+  
+    Inputs: 
+    ++ DirsDict (dict) a dictionary containing all the paths for reading the images and saving the results
+       keys:
+           - resDir: results directory
+    ++ df_sc   (pandas df) input dataframe which contains single cells profiles for the conditions under 
+                           comparision
+    ++ contLabel (str): value for reference perturbation for comparision
+    ++ d (str): value for target perturbation for comparision
+    ++ nClus (int): number of clusters 
+    ++ feats2use (list): list of features to use for clustering
+    ++ compartments (list): list of channels for single cell visualization
+    ++ boxSize (int): single cell box size  for visualizations
+
+    """        
+    
+#     rootDir=DirsDict['root']
     resultsDir=DirsDict['resDir']
 #     DirsDict['imDir']=rootDir+"Mito_Morphology_input/images/"
     
@@ -99,7 +118,7 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
     # wtANDmtDf['clusterLabels']
     data2plotMut=wtANDmtDf_scaled[(wtANDmtDf_scaled['label'] == d)]['clusterLabels'].values
     data2plotWT=wtANDmtDf_scaled[wtANDmtDf_scaled['label'] == contLabel]['clusterLabels'].values
-
+    print(data2plotMut.shape,data2plotWT.shape)
     histMut, bin_edges = np.histogram(data2plotMut,range(nClus+1), density=True)
     histWT, bin_edges = np.histogram(data2plotWT,range(nClus+1), density=True)
 
@@ -156,14 +175,15 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
             if clusterDF.shape[0]> nSampleSCs:
                 samples2plot=clusterDF.sort_values('dist2Mean',ascending=True).sample(nSampleSCs).reset_index(drop=True)
                 title_str="Cluster "+str(c)
-                f=visualize_n_SingleCell(compartments,samples2plot,boxSize,title=title_str)
+                if pooled:
+                    im_size=5500
+                    f=visualize_n_SingleCell_pooled(compartments,samples2plot,boxSize,im_size,title=title_str);
+                else:
+                    f=visualize_n_SingleCell(compartments,samples2plot,boxSize,title=title_str)
                 f.savefig(resultsDir+'/cluster'+str(c)+'_examplar'+saveFormat)     
                 plt.close('all')    
                 
     return
-
-
-
 
 
 def visualize_n_SingleCell(channels,sc_df,boxSize,title="",compressed=False,compressed_im_size=None):
@@ -320,9 +340,13 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
                 imPath=sc_df.loc[index,'Path_Outlines'];
 #                 im_size=sc_df["Width_CorrDNA"].values[0]   #cp220
 #                 im_size= 5500
-                print(imPath)
-                imD = resize(skimage.io.imread(imPath),(im_size,im_size),mode='constant',preserve_range=True,order=0).astype('uint8')[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
-                print(imPath)
+#                 print(imPath)
+                if os.path.exists(imPath):
+                    imD = resize(skimage.io.imread(imPath),(im_size,im_size),\
+                                 mode='constant',preserve_range=True,order=0).\
+                astype('uint8')[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
+                else:
+                    imD=np.zeros((boxSize,boxSize))
 
             else:
 #                 ch_D=sc_df.loc[index,'Image_FileName_Orig'+c];
@@ -346,14 +370,19 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
                 imD=np.squeeze(skimage.io.imread(imPath))[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
 #                 print(np.squeeze(skimage.io.imread(imPath)).shape)
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
+#             print(imD.shape,'h')
             axarr[index,cpi].imshow(imD,cmap='gray');axarr[0,cpi].set_title(c);
             cpi+=1        
 
 #         Well=sc_df.loc[index,'Metadata_Well']
 #         Site=str(sc_df.loc[index,'Metadata_Site'])
 #         imylabel=Well+'\n'+Site
-        imylabel=sc_df.loc[index,'Metadata_Foci_Barcode_MatchedTo_Barcode'][0:9]
 
+        if 'label' in sc_df.columns:
+            imylabel=sc_df.loc[index,'label']+'\n'+sc_df.loc[index,'Metadata_Foci_Barcode_MatchedTo_Barcode'][0:9]
+        else:
+            imylabel=sc_df.loc[index,'Metadata_Foci_Barcode_MatchedTo_Barcode'][0:12]
+#         print(imylabel)
         axarr[index,0].set_ylabel(imylabel);            
             
             

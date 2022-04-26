@@ -335,15 +335,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
 #        'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09',\
 #        'G10', 'G11', 'G12', 'H01', 'H02', 'H03', 'H04', 'H05', 'H06',\
 #        'H07', 'H08', 'H09', 'H10', 'H11', 'H12'];
-<<<<<<< HEAD
-<<<<<<< HEAD
 #     meta_well_col_str="Image_Metadata_Well"
-=======
-    meta_well_col_str="Image_Metadata_Well"
->>>>>>> c092b1cdc8156f6bbc4a8a57cd3de230a576d110
-=======
-#     meta_well_col_str="Image_Metadata_Well"
->>>>>>> a68232f106b87bc031457f54deff2b165c9abb74
 #     meta_well_col_str="Metadata_Well"
 
     sql_file="sqlite:////"+fileName
@@ -592,7 +584,9 @@ def readSingleCellData_sqlalch_FeatureAndWell_subset(fileName,selected_feature,w
     
 #     readSingleCellData_sqlalch_well_subset(fileName,wells):
     
-
- 
+    
+    
+    
+    
     
     
