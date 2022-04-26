@@ -78,16 +78,7 @@ def pooled_cell_painting_single_cell_visualization(input_gene_or_guide,batch,roo
     return 
 
 
-# main program starts here
 if __name__ == '__main__':
     if (len(sys.argv) < 4):
         print('This function requires at least three inputs for:\ninput_gene_or_guide\nbatch\nrootDir')
     pooled_cell_painting_single_cell_visualization(sys.argv[1],sys.argv[2],sys.argv[3])
-#     randomname = None           #ensure that this variable is clean to start
-#     if (len(sys.argv) > 1):     #test whether any arguments have been passed in
-#         randomname = sys.argv[1]
-    # Check that name is a valid string
-#     if (randomname is not None and valid(randomname)):
-#         hello(randomname)
-#     else:
-#         print("No name passed in")
