@@ -8,7 +8,7 @@ sqlite files are huge (up to 50 GB) and loading them to memory may cause memory 
 Here are alternative ways of handling this issue:
 
 
-## Reading full or a subset of an input .sqlite file
+## Reading the whole or a subset of an input .sqlite file
 - All the information about single cells are stored in a sqlite file for each plate
 sqlite files are huge (up to 50 GB) and loading them to memory may cause memory errors. 
 We can load subset of the huge per plate tables to handle the memory issue.
