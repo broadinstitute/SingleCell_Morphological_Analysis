@@ -19,7 +19,10 @@ import matplotlib.pyplot as plt
 import os
 from functools import reduce
 from sklearn.cluster import KMeans
-import skimage
+# import skimage
+from skimage import exposure
+from skimage.transform import resize
+import skimage.io
 from utils.read_data import *
 # from read_data import *
 
@@ -49,16 +52,24 @@ def extract_single_cell_samples(df_p_s,n_cells,cell_selection_method):
     import hdmedians as hd
     from skfda import FDataGrid
     from skfda.exploratory.stats import geometric_median    
-    df_p_s,_ = handle_nans(df_p_s);
-    cp_features, cp_features_analysis =  extract_feature_names(df_p_s);
+    cp_features, cp_features_analysis_0 =  extract_feature_names(df_p_s);
+    df_p_s, cp_features_analysis = handle_nans(df_p_s,cp_features_analysis_0);
+    
+    
+#     print("heloo")
 #     print(cp_features)
     if cell_selection_method=='random':
         dff=df_p_s.reset_index(drop=True).sample(n = n_cells, replace = False).reset_index(drop=True)
 
     elif cell_selection_method=='representative': 
-        n_cells_in_each_cluster_unif=30
+        df_p_s[cp_features_analysis] = df_p_s[cp_features_analysis].interpolate()
+        if df_p_s.shape[0]>60:
+            n_cells_in_each_cluster_unif=30
+        else:
+            n_cells_in_each_cluster_unif=int(df_p_s.shape[0]/5) 
+            
         n_clusts=int(df_p_s.shape[0]/n_cells_in_each_cluster_unif) 
-        kmeans = KMeans(n_clusters=n_clusts).fit(df_p_s[cp_features_analysis].values)
+        kmeans = KMeans(n_clusters=n_clusts).fit(np.nan_to_num(df_p_s[cp_features_analysis].values))
         clusterLabels=kmeans.labels_
         df_p_s['clusterLabels']=clusterLabels;
         mean_clus=kmeans.predict(df_p_s[cp_features_analysis].mean().values[np.newaxis,])
@@ -234,7 +245,7 @@ def visualize_n_SingleCell(channels,sc_df,boxSize,title="",compressed=False,comp
     f.subplots_adjust(hspace=0, wspace=0)
 
 
-    maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
+#     maxRanges={"DNA":8000,"RNA":6000,"Mito":6000,"ER":8000,"AGP":6000}
     for index in range(sc_df.shape[0]):
                
         xCenter=int(sc_df.loc[index,'Nuclei_Location_Center_X'])
@@ -245,11 +256,12 @@ def visualize_n_SingleCell(channels,sc_df,boxSize,title="",compressed=False,comp
         for c in channels:
             if c=='Outline':
                 imPath=sc_df.loc[index,'Path_Outlines'];
-                imD=skimage.io.imread(imPath)
+                imD1=skimage.io.imread(imPath)
                 
                 if compressed:
-                    imD=skimage.transform.resize(imD,[compressed_im_size,compressed_im_size],mode='constant',preserve_range=True,order=0)
-                
+                    imD1=skimage.transform.resize(imD,[compressed_im_size,compressed_im_size],mode='constant',preserve_range=True,order=0)
+                    
+                clim_max=imD1.max()
             else:
 #                 ch_D=sc_df.loc[index,'Image_FileName_Orig'+c];
                 ch_D=sc_df.loc[index,'FileName_Orig'+c];
@@ -260,11 +272,14 @@ def visualize_n_SingleCell(channels,sc_df,boxSize,title="",compressed=False,comp
                 imPath=imageDir+ch_D
             
                 imD=skimage.io.imread(imPath)
+                imD1=exposure.rescale_intensity(imD,in_range=(imD.min(),np.percentile(imD, 99.95)))
+                clim_max=imD1.max()
                 
-            print(imD.shape)
-            imD_cropped=imD[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
+                
+#             print(imD1.shape)
+            imD_cropped=imD1[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
-            axarr[index,cpi].imshow(imD_cropped,cmap='gray');axarr[0,cpi].set_title(c);
+            axarr[index,cpi].imshow(imD_cropped,cmap='gray',clim=(0, clim_max));axarr[0,cpi].set_title(c);
             cpi+=1        
 
 #         Well=sc_df.loc[index,'Metadata_Well']
@@ -311,12 +326,11 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
     f (object): handle to the figure
   
     """
-    from skimage.transform import resize
-    
+
     halfBoxSize=int(boxSize/2);
 #     print(channels)
     
-    import skimage.io
+    
     f, axarr = plt.subplots(sc_df.shape[0], len(channels),figsize=(len(channels)*2,sc_df.shape[0]*2));
     if len(title)>0:
         print(title)
@@ -341,13 +355,15 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
 #                 im_size=sc_df["Width_CorrDNA"].values[0]   #cp220
 #                 im_size= 5500
 #                 print(imPath)
+                
                 if os.path.exists(imPath):
-                    imD = resize(skimage.io.imread(imPath),(im_size,im_size),\
+                    imD2 = resize(skimage.io.imread(imPath),(im_size,im_size),\
                                  mode='constant',preserve_range=True,order=0).\
                 astype('uint8')[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
+                    
                 else:
-                    imD=np.zeros((boxSize,boxSize))
-
+                    imD2=np.zeros((boxSize,boxSize))
+                clim_max=imD2.max()
             else:
 #                 ch_D=sc_df.loc[index,'Image_FileName_Orig'+c];
                 ch_D=sc_df.loc[index,'FileName_Corr'+c];
@@ -365,13 +381,19 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
     int(sc_df.loc[index,'Align_Yshift_'+align_column_ch_name_map[c]]) 
             
 #                 print(yCenterC,xCenterC)
-                
+#                 print(imPath)
 #                 print('im_size',np.squeeze(skimage.io.imread(imPath)).shape)
-                imD=np.squeeze(skimage.io.imread(imPath))[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
+                imD=np.squeeze(skimage.io.imread(imPath))
+                imD1=exposure.rescale_intensity(imD,in_range=(imD.min(),np.percentile(imD, 99.95)))#output is  unit16
+#                 and scaled to range 0,65535
+                clim_max=imD1.max()
+        
+                imD2=imD1[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
+#                 print(imD1.min(),imD1.max())
 #                 print(np.squeeze(skimage.io.imread(imPath)).shape)
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
 #             print(imD.shape,'h')
-            axarr[index,cpi].imshow(imD,cmap='gray');axarr[0,cpi].set_title(c);
+            axarr[index,cpi].imshow(imD2,cmap='gray',clim=(0, clim_max));axarr[0,cpi].set_title(c);
             cpi+=1        
 
 #         Well=sc_df.loc[index,'Metadata_Well']
@@ -399,6 +421,8 @@ def visualize_n_SingleCell_pooled(channels,sc_df,boxSize,im_size,title=""):
             axarr[j,i].set_aspect('auto')
     
     return f
+
+
 
 
 
@@ -451,7 +475,7 @@ def colorize_image(img, col):
 def normalize(img):
 
     # normalize to [0,1]
-    img=abs(img.min())+img
+#     img=abs(img.min())+img
     percentile = 99.95
     high = np.percentile(img, percentile)
     low = np.percentile(img, 100-percentile)
@@ -469,7 +493,35 @@ def normalize(img):
     image_01[image_01<0]=0
 #     image[image<-1]=-1
 #     print(image.min(),image.max())
+
     img_255 = skimage.img_as_ubyte(image_01)
+    
 #     print(img_255.min(),img_255.max())
 #     print(image_01.min(),image_01.max())
     return img_255, image_01  
+
+
+# def normalize(img):
+#     # normalize to [0,1]
+#     percentile = 99.95
+#     high = np.percentile(img, percentile)
+#     low = np.percentile(img, 100-percentile)
+
+# #     img = np.minimum(high, img)
+# #     img = np.maximum(low, img)
+    
+# #     high=np.max(img)
+# #     low=np.min(img)
+
+# #     img = (img - low) / (high - low) # gives float64, thus cast to 8 bit later
+# #     vmin, vmax = scipy.stats.scoreatpercentile(image, (0.05, 99.95))
+# #     vmax = min(vmax, pmax)
+# #     image = skimage.exposure.rescale_intensity(img, in_range=(low, high))
+#     image = skimage.exposure.rescale_intensity(img, in_range=(low, high),out_range=(0,255)).astype(np.uint8)
+# #     image = skimage.exposure.rescale_intensity(img, in_range=(-1, 1))
+# #     image[image>1]=1
+# #     image[image<-1]=-1
+# #     print(image.max(),image.min())
+# #     img = skimage.img_as_ubyte(image)
+# #     print(image.max(),image.min())
+#     return imageJab

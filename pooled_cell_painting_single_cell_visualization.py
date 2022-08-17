@@ -17,6 +17,7 @@ def pooled_cell_painting_single_cell_visualization(input_gene_or_guide,batch,roo
         - e.g., '20200805_A549_WG_Screen' 
     - **rootDir** - image, metadata and overlays address is following the structure of dirs in the s3 bucket so we need to fix the root directory and everything else is being formed accroding to the s3 bucket structure 
         - e.g., '/home/ubuntu/calbucket/projects/2018_11_20_Periscope_Calico/'
+        
   - OPTIONAL:
     -  **n_cells** - (int), number of single cells to be visualized, it is ignored if cell_selection_method is geometric_median
     -  **box_size** - (int), size of box in pixels for cropping a cell    
@@ -28,9 +29,13 @@ def pooled_cell_painting_single_cell_visualization(input_gene_or_guide,batch,roo
         - geometric_median - plots single sample than is the geometric median of samples    
 
     """
-    sc_files_dir=rootDir+'workspace/software/CP186-A549-WG/data/1.profiles/20200805_A549_WG_Screen/single_cell/single_cell_by_guide/'
+    
+    batch_multi_name_dict={'20210422_6W_CP257':'CP257-HeLa-WG',\
+                       '20200805_A549_WG_Screen':'CP186-A549-WG'}
+    batchName2=batch_multi_name_dict[batch]
+    sc_files_dir=rootDir+'workspace/software/'+batchName2+'/data/1.profiles/'+batch+'/single_cell/single_cell_by_guide/'
+    im_size=5500 # hardcoded for now, TODO: create a dictionary if this number is different for 257 vs 186    
 
-    im_size=5500 # hardcoded for now, TODO: create a dictionary if this number is different for 257
 
     ##################### read metadata and create the file name for input guide or gene
     metadata_dir=rootDir+'workspace/metadata/'+batch+'/'
