@@ -413,7 +413,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
 
 
 
-def readSingleCellData_sqlalch_wellAndObject_subset(fileName,wells,n_rand_objs):
+def readSingleCellData_sqlalch_wellAndObject_subset(fileName,wells,meta_well_col_str,n_rand_objs):
     import pandas as pd
     from sqlalchemy import create_engine
     from functools import reduce
@@ -447,7 +447,7 @@ def readSingleCellData_sqlalch_wellAndObject_subset(fileName,wells,n_rand_objs):
 #     compartment_query = "select * from {} WHERE {} IN {};".format("Image","ImageNumber",list_str)
 #     compartment_query = "select * from {} WHERE {} IN {};".\
     compartment_query = "select * from {} WHERE {} IN {};".\
-    format("Image","Metadata_Well",list_str)
+    format("Image",meta_well_col_str,list_str)
 #     format("Image","Image_Metadata_Well",list_str)
     start1 = time.time()
     plateImageDf= pd.read_sql(sql=compartment_query, con=conn);
