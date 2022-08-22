@@ -49,9 +49,7 @@ def extract_single_cell_samples(df_p_s,n_cells,cell_selection_method):
   
     """    
 
-    import hdmedians as hd
-    from skfda import FDataGrid
-    from skfda.exploratory.stats import geometric_median    
+
     cp_features, cp_features_analysis_0 =  extract_feature_names(df_p_s);
     df_p_s, cp_features_analysis = handle_nans(df_p_s,cp_features_analysis_0);
     
@@ -77,6 +75,10 @@ def extract_single_cell_samples(df_p_s,n_cells,cell_selection_method):
         dff=df_ps.reset_index(drop=True).sample(n = np.min([n_cells,df_ps.shape[0]]), replace = False).reset_index(drop=True)
 
     elif cell_selection_method=='geometric_median':    
+        import hdmedians as hd
+        from skfda import FDataGrid
+        from skfda.exploratory.stats import geometric_median            
+        
 #     #     method 1
 # #         ps_arr=df_p_s[cp_features_analysis].astype(np.float32).values
 #         ps_arr=df_p_s[cp_features_analysis].values
@@ -265,18 +267,19 @@ def visualize_n_SingleCell(channels,sc_df,boxSize,title="",compressed=False,comp
             else:
 #                 ch_D=sc_df.loc[index,'Image_FileName_Orig'+c];
                 ch_D=sc_df.loc[index,'FileName_Orig'+c];
-#                 print(ch_D)
+                
     #         imageDir=imDir+subjectID+' Mito_Morphology/'
 #                 imageDir=sc_df.loc[index,'Image_PathName_Orig'+c]+'/'
                 imageDir=sc_df.loc[index,'PathName_Orig'+c]+'/'
                 imPath=imageDir+ch_D
-            
+                print(imPath)
                 imD=skimage.io.imread(imPath)
                 imD1=exposure.rescale_intensity(imD,in_range=(imD.min(),np.percentile(imD, 99.95)))
                 clim_max=imD1.max()
                 
                 
-#             print(imD1.shape)
+            print(imPath,imD1.shape)
+            
             imD_cropped=imD1[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
             axarr[index,cpi].imshow(imD_cropped,cmap='gray',clim=(0, clim_max));axarr[0,cpi].set_title(c);
