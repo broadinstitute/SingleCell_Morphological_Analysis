@@ -1,6 +1,4 @@
 """
-This script contains usefull functions used in the notebooks
-
 @author: mhaghigh
 """
 import pandas as pd
@@ -15,9 +13,10 @@ import time
 import pandas as pd
 from sqlalchemy import create_engine
 from functools import reduce
+# from filter_edge_single_cells import edgeCellFilter
+# import filter_edge_single_cells
 
-
-
+from ..preprocess import filter_out_edge_single_cells
 ################################################################################
 
 def readSingleCellData_r(fileName):
@@ -82,50 +81,11 @@ def readSingleCellData_r(fileName):
 #     print(2)
 #     pd_df = pd_df.interpolate()
 #     print(3)
-#     pd_df=edgeCellFilter(pd_df);  
+#     pd_df=filter_out_edge_single_cells.edgeCellFilter(pd_df);  
 #     print(4)
     return pd_df
 
-########################function to remove cells on the border
-def edgeCellFilter(df_1):   
-    # remove cells on the border
-#     imgSize=1080
-#     imgSize=2048
-    imgSize=dfWithWTlabels.Metadata_ImageSizeX.values[0]
-    borderLength=int(np.percentile(dfWithWTlabels.Cells_AreaShape_MajorAxisLength.values, 90)/2);
-    df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-borderLength)) | \
-                              (df_1['Nuclei_Location_Center_X']<(borderLength))\
-                            | (df_1['Nuclei_Location_Center_Y']>(imgSize-borderLength)) | \
-                              (df_1['Nuclei_Location_Center_Y']<(borderLength))),:].reset_index(drop=True)
-    return df_1_centCells,borderLength
 
-
-
-########################function to remove cells on the border
-def edgeCellFilter2(df_1,imgSize,borderLength):   
-
-    df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-borderLength)) | \
-                              (df_1['Nuclei_Location_Center_X']<(borderLength))\
-                            | (df_1['Nuclei_Location_Center_Y']>(imgSize-borderLength)) | \
-                              (df_1['Nuclei_Location_Center_Y']<(borderLength))),:].reset_index(drop=True)
-    return df_1_centCells
-
-
-# def edgeCellFilter(df_1):   
-#     # remove cells on the border
-# #     imgSize=1080
-# #     imgSize=2048
-#     print(df_1.columns[df_1.columns.str.contains("Metadata_ImageSizeX")])
-#     print(df_1.columns[df_1.columns.str.contains("ImageSize")])
-#     imgSize=df_1.Metadata_ImageSizeX.values[0]
-#     borderLength=int(np.percentile(df_1.Cells_AreaShape_MajorAxisLength.values, 90)/2);
-#     print(imgSize,borderLength)
-#     df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-borderLength)) | \
-#                               (df_1['Nuclei_Location_Center_X']<(borderLength))\
-#                             | (df_1['Nuclei_Location_Center_Y']>(imgSize-borderLength)) | \
-#                               (df_1['Nuclei_Location_Center_Y']<(borderLength))),:].reset_index(drop=True)
-
-#     return df_1_centCells,borderLength
 
 def readSingleCellData_sqlalch(fileName,compartments):
     from sqlalchemy import create_engine
@@ -343,7 +303,7 @@ def readSingleCellData_sqlalch_well_subset(fileName,wells,meta_well_col_str):
     plateDfwMeta = plateDfwMeta.loc[:,~plateDfwMeta.columns.duplicated()]
 #     print(plateDfwMeta.shape)
 #     print(plateDfwMeta.Image_Metadata_ImageSizeX.values[0])
-#     plateDfwMeta=edgeCellFilter2(plateDfwMeta);  
+#     plateDfwMeta=filter_out_edge_single_cells.edgeCellFilter2(plateDfwMeta);  
     
     return plateDfwMeta   
 
@@ -530,10 +490,5 @@ def readSingleCellData_sqlalch_FeatureAndWell_subset(fileName,selected_feature,w
     
     
 #     readSingleCellData_sqlalch_well_subset(fileName,wells):
-    
-    
-    
-    
-    
     
     
