@@ -26,7 +26,7 @@ def extract_cpfeature_names(df_input):
     "|Nuclei_Correlation_RWC_|Nuclei_Granularity_14_|Nuclei_Granularity_15_|Nuclei_Granularity_16_")].tolist()
     
     if 0:  # changed to the above approach as the below fixed hard coded one was 
-        with open('./utils/blackListFeatures.pkl', 'rb') as f:
+        with open('./blackListFeatures.pkl', 'rb') as f:
             blackListFeatures = pickle.load(f)
     
     

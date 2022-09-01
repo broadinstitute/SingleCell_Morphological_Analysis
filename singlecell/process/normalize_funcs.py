@@ -25,8 +25,20 @@ def standardize_df_columns(sc_df,cp_features_analysis,scaling_method):
     
 #     scaling_string = "scaler = sp."+scaling_method+"Scaler()"  
 #     exec(scaling_string)
-    scaler = sp.RobustScaler()
+#     scaler = sp.RobustScaler()
 #     scaler = sp.StandardScaler()
+
+
+    if scaling_method=='MinMax':
+        scaler = sp.MinMaxScaler(feature_range=(0,1))
+
+    elif scaling_method=='Robust':
+        scaler = sp.RobustScaler()
+        
+    elif scaling_method=='Standard':
+        scaler = sp.StandardScaler()
+            
+
 
     sc_df_output = sc_df.copy()
     sc_df_output.loc[:,cp_features_analysis]=scaler.fit_transform(sc_df.loc[:,cp_features_analysis].values)       
@@ -43,7 +55,15 @@ def zscore_df_columns_by_control(sc_control_df, sc_df,cp_features_analysis,scali
 #     scaling_string = "scaler = sp."+scaling_method+"Scaler()"  
 #     exec(scaling_string)
 
-    scaler = sp.RobustScaler()
+    if scaling_method=='MinMax':
+        scaler = sp.MinMaxScaler(feature_range=(0,1))
+
+    elif scaling_method=='Robust':
+        scaler = sp.RobustScaler()
+        
+    elif scaling_method=='Standard':
+        scaler = sp.StandardScaler()
+        
     sc_df_output = sc_df.copy()
     scaler.fit(sc_control_df.loc[:,cp_features_analysis])
     sc_df_output.loc[:,cp_features_analysis]=scaler.transform(sc_df.loc[:,cp_features_analysis])       

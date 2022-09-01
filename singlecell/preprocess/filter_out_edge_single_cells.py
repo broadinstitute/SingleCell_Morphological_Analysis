@@ -3,7 +3,7 @@
 
 * edge cells:
   - Are the cells which their nuclei center is less than a specified margin,
-    - The margin could be cells an optional input or if not specified, 
+    - The margin could be an optional input or if not specified, 
     - By default, it is the 90th percentile of the "Cells_AreaShape_MajorAxisLength" feature devided by 2
 
 """
@@ -11,43 +11,42 @@
 import pandas as pd
 import numpy as np
 
-########################function to remove cells on the border
-def edgeCellFilter(df_input):   
-    # remove cells on the border
-#     imgSize=1080
-#     imgSize=2048
-    imgSize=df_input.Metadata_ImageSizeX.values[0]
-    edge_margin=int(np.percentile(df_input.Cells_AreaShape_MajorAxisLength.values, 90)/2);
-    df_1_centCells=df_input.loc[~((df_input['Nuclei_Location_Center_X']>(imgSize-edge_margin)) | \
+######################## function to remove cells on the border
+def edgeCellFilter(df_input, image_width=None, edge_margin=None):   
+    """
+    remove cells close to the image borders 
+    edge cells are the cells which their nuclei center is less than a specified margin,
+    
+    Inputs:
+        df_input
+        image_width (optional) if not given as the input it would be inferred from the input dataframe columns
+        edge_margin (optional) if not given as the input, it would be calculated
+                from the input dataframe columns
+                - By default, it is the 90th percentile of the "Cells_AreaShape_MajorAxisLength" feature devided by 2
+
+    """    
+    
+    if not image_width:
+        metadata_cols_4size = df_input.columns[df_input.columns.str.contains('Width|ImageSize')]
+        if len(metadata_cols_4size):
+#             print(metadata_cols_4size)
+            image_width=df_input[metadata_cols_4size[0]].values[0]
+#             print(image_width)
+        else:
+            raise Exception("No metadata columns for inferring image size are detected! Please enter edge_margin as an input!")
+            
+        
+    if not edge_margin:
+        if 'Cells_AreaShape_MajorAxisLength' in df_input.columns:
+            edge_margin=int(np.percentile(df_input.Cells_AreaShape_MajorAxisLength.values, 90)/2);
+        else:
+            raise Exception("The Cells_AreaShape_MajorAxisLength column is not detected! Please enter image_width as an input!")
+        
+        
+    df_filtered_edge_cells=df_input.loc[~((df_input['Nuclei_Location_Center_X']>(image_width-edge_margin)) | \
                               (df_input['Nuclei_Location_Center_X']<(edge_margin))\
-                            | (df_input['Nuclei_Location_Center_Y']>(imgSize-edge_margin)) | \
+                            | (df_input['Nuclei_Location_Center_Y']>(image_width-edge_margin)) | \
                               (df_input['Nuclei_Location_Center_Y']<(edge_margin))),:].reset_index(drop=True)
-    return df_1_centCells,edge_margin
+    
+    return df_filtered_edge_cells, edge_margin
 
-
-
-########################function to remove cells on the border
-def edgeCellFilter2(df_1,imgSize,edge_margin):   
-
-    df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-edge_margin)) | \
-                              (df_1['Nuclei_Location_Center_X']<(edge_margin))\
-                            | (df_1['Nuclei_Location_Center_Y']>(imgSize-edge_margin)) | \
-                              (df_1['Nuclei_Location_Center_Y']<(edge_margin))),:].reset_index(drop=True)
-    return df_1_centCells
-
-
-# def edgeCellFilter(df_1):   
-#     # remove cells on the border
-# #     imgSize=1080
-# #     imgSize=2048
-#     print(df_1.columns[df_1.columns.str.contains("Metadata_ImageSizeX")])
-#     print(df_1.columns[df_1.columns.str.contains("ImageSize")])
-#     imgSize=df_1.Metadata_ImageSizeX.values[0]
-#     borderLength=int(np.percentile(df_1.Cells_AreaShape_MajorAxisLength.values, 90)/2);
-#     print(imgSize,borderLength)
-#     df_1_centCells=df_1.loc[~((df_1['Nuclei_Location_Center_X']>(imgSize-borderLength)) | \
-#                               (df_1['Nuclei_Location_Center_X']<(borderLength))\
-#                             | (df_1['Nuclei_Location_Center_Y']>(imgSize-borderLength)) | \
-#                               (df_1['Nuclei_Location_Center_Y']<(borderLength))),:].reset_index(drop=True)
-
-#     return df_1_centCells,borderLength

@@ -19,72 +19,6 @@ from functools import reduce
 from ..preprocess import filter_out_edge_single_cells
 ################################################################################
 
-def readSingleCellData_r(fileName):
-    import rpy2.robjects as robjects
-    from rpy2.robjects import pandas2ri
-    ts=robjects.r('ts')
-    from rpy2.robjects.packages import importr
-    from rpy2.robjects.conversion import localconverter
-
-    rstring="""
-    function(fileName){
-      
-    library(tidyverse)
-    library(magrittr)
-    backend <- file.path(fileName)
-    
-    db <- src_sqlite(path = backend)
-    
-    image <- tbl(src = db, "Image")
-    
-    object <-
-      tbl(src = db, "Cells") %>%
-      inner_join(tbl(src = db, "Cytoplasm"),
-                 by = c("TableNumber", "ImageNumber", "ObjectNumber")) %>%
-      inner_join(tbl(src = db, "Nuclei"),
-                 by = c("TableNumber", "ImageNumber", "ObjectNumber"))
-    
-    object %<>% inner_join(image, by = c("TableNumber", "ImageNumber")) 
-    variables <-
-      colnames(object) %>%
-      stringr::str_subset("^Nuclei_|^Cells_|^Cytoplasm_")
-    dt <- object %<>%
-      collect()
-    return(dt)
-    }
-    """
-    
-#     fileName=rootPath+"/backend/"+batchName+"/"+plateName+"/"+plateName+".sqlite"
-    print(fileName)
-    
-    if not os.path.isfile(fileName):
-        print('squlite file not exist!')
-        return pd.DataFrame()
-    
-    rfunc=robjects.r(rstring)
-    
-    rdata=ts(fileName)
-    r_df=rfunc(rdata)
-
-    with localconverter(robjects.default_converter + pandas2ri.converter):
-      pd_df = robjects.conversion.rpy2py(r_df)
-
-#     pd_df = pandas2ri.ri2py_dataframe(r_df)
-    #pd_df=pd_df.replace('nan', np.nan)
-    
-    cols2remove=[i for i in pd_df.columns.tolist() if ((pd_df[i]=='nan').sum(axis=0)/pd_df.shape[0])>0.05]
-    print(cols2remove)
-    pd_df=pd_df.drop(cols2remove, axis=1);
-    #     pd_df = pd_df.fillna(pd_df.median())
-#     print(1)
-    pd_df=pd_df.replace('nan', np.nan)
-#     print(2)
-#     pd_df = pd_df.interpolate()
-#     print(3)
-#     pd_df=filter_out_edge_single_cells.edgeCellFilter(pd_df);  
-#     print(4)
-    return pd_df
-
 
 
 def readSingleCellData_sqlalch(fileName,compartments):
@@ -446,7 +380,7 @@ def readSingleCellData_sqlalch_FeatureAndWell_subset(fileName,selected_feature,w
     list_str=list_str[:-2]+")"
 
     img_query = "select * from {} WHERE {} IN {};".\
-    format("Image","Image_Metadata_Well",list_str)
+    format("Image","Metadata_Well",list_str)
 
     plateImageDf= pd.read_sql(sql=img_query, con=conn);
     img_nums=plateImageDf.ImageNumber.unique().tolist()
@@ -468,6 +402,55 @@ def readSingleCellData_sqlalch_FeatureAndWell_subset(fileName,selected_feature,w
     print('time elapsed:',(end1 - start1)/60, " mins")
     
     return plateDfwMeta
+    
+    
+def readSingleCellData_sqlalch_FeaturesAndWells(fileName,selected_features,wells):
+
+    start1 = time.time()
+    # selected_feature='Cells_RadialDistribution_MeanFrac_mito_tubeness_16of16'
+#     selected_feature='Cells_Intensity_IntegratedIntensity_DNA'
+    # f2='Cells_Intensity_IntegratedIntensity_DNA'
+
+    sql_file="sqlite:////"+fileName
+    engine = create_engine(sql_file)
+    conn = engine.connect()
+
+    ######## Query wells from Image table
+    ls_wells=wells.copy()
+    list_str="('"
+    for i in ls_wells:
+        list_str=list_str+str(i)+"','" 
+    list_str=list_str[:-2]+")"
+
+    img_query = "select * from {} WHERE {} IN {};".\
+    format("Image","Metadata_Well",list_str)
+
+    plateImageDf= pd.read_sql(sql=img_query, con=conn);
+    img_nums=plateImageDf.ImageNumber.unique().tolist()
+
+    list_str2="("
+    for i in img_nums:
+        list_str2=list_str2+str(i)+',' 
+    list_str2=list_str2[:-1]+")"
+    ###########################
+
+    plateDf_list=[]
+    for selected_feature in selected_features:
+        compartments=selected_feature.split("_")[0]
+        query_cols = "TableNumber, ImageNumber, ObjectNumber, "+selected_feature#+", "+f2
+        compartment_query = "select {} from {} WHERE {} IN {};".format(query_cols,compartments,"ImageNumber",list_str2)
+        plateDf_list.append(pd.read_sql(sql=compartment_query, con=conn))
+        
+    plateDf = reduce(lambda left,right: pd.merge(left,right,on=["TableNumber", "ImageNumber", "ObjectNumber"]), plateDf_list)        
+
+    plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])
+
+    end1 = time.time()
+    print('time elapsed:',(end1 - start1)/60, " mins")
+    
+    return plateDfwMeta   
+    
+    
     
 #### read samples of different replicates of the drug rep data 
 
