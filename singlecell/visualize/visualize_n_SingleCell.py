@@ -171,8 +171,13 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
     """
     
     if compressed:
-        
-        original_im_size=sc_df['Image_Width_OrigDNA'].values[0]
+        metadata_cols_4size = sc_df.columns[sc_df.columns.str.contains('Width|ImageSize')]
+        if len(metadata_cols_4size):
+            original_im_size=sc_df[metadata_cols_4size[0]].values[0]
+        else:
+            raise Exception("No metadata columns for inferring image size are detected! Please enter original_im_size here!")
+            
+#         original_im_size=sc_df['Image_Width_OrigDNA'].values[0]
         #         compressed_im_size=1080;
         compRatio=(compressed_im_size/original_im_size);
         
@@ -208,9 +213,10 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
             ch_fName=sc_df.loc[index,'FileName_Orig'+channels[ci]];
             ch_pName=sc_df.loc[index,'PathName_Orig'+channels[ci]];
             
+#             print(ch_pName+'/'+ch_fName)
             image=skimage.io.imread(ch_pName+'/'+ch_fName)
             image_cropped = crop_single_cell_image(image,xCenter,yCenter,halfBoxSize)
-            
+#             print(image_cropped.shape,xCenter,yCenter)
            
             if 1:
                 image_cropped= exposure.rescale_intensity(image_cropped,in_range=(image.min(),np.percentile(image, 99.95)))
@@ -241,14 +247,37 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
             image_y_label = form_image_y_label_string(sc_df.loc[index,info_columns],info_columns);
             axarr[index,0].set_ylabel(image_y_label);
             
-    return 
+    return f
 
 
 def crop_single_cell_image(image, xCenter,yCenter,halfBoxSize):
 
+    im_w,im_h=image.shape;
+#     print(im_w,im_h)
+    before_y_pad=0
+    after_y_pad=0
+    before_x_pad=0
+    after_x_pad=0
 
-    image_cropped=image[yCenter-halfBoxSize:yCenter+halfBoxSize,\
-                        xCenter-halfBoxSize:xCenter+halfBoxSize]
+    if xCenter-halfBoxSize<0:
+        before_x_pad=abs(xCenter-halfBoxSize)
+
+    if yCenter-halfBoxSize<0:
+        before_y_pad=abs(yCenter-halfBoxSize)
+
+    if xCenter+halfBoxSize>im_w:
+        after_x_pad=abs(im_w-xCenter-halfBoxSize)
+
+    if yCenter+halfBoxSize>im_h:
+        after_y_pad=abs(im_h-yCenter-halfBoxSize)
+
+    image_cropped=image[np.maximum(yCenter-halfBoxSize,0):np.minimum(yCenter+halfBoxSize,im_w),\
+                        np.maximum(xCenter-halfBoxSize,0):np.minimum(xCenter+halfBoxSize,im_h)]
+#     print('image_cropped',image_cropped.shape)
+    if np.max([before_y_pad, after_y_pad,before_x_pad, after_x_pad])>0:
+        image_cropped=np.pad(image_cropped, ((before_y_pad, after_y_pad), (before_x_pad, after_x_pad)), 'minimum')
+#         print('image_cropped',image_cropped.shape)
+
     return image_cropped
     
     

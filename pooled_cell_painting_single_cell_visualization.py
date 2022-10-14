@@ -2,7 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 import os
-from utils.visualize_data import *
+from singlecell.visualize import visualize_n_SingleCell
 
 def pooled_cell_painting_single_cell_visualization(input_gene_or_guide,batch,rootDir,\
             n_cells=6,box_size=100,channels=['DNA','Mito','Phalloidin','WGA','ER','Outline'],\
@@ -78,7 +78,8 @@ def pooled_cell_painting_single_cell_visualization(input_gene_or_guide,batch,roo
         df_samples=df_p_s_all.copy()
 
     ################  visualize cells
-    f=visualize_n_SingleCell_pooled(channels,df_samples,box_size,im_size,title=input_gene_or_guide+'_'+cell_selection_method);
+    f=visualize_n_SingleCell.visualize_n_SingleCell_pooled(channels,\
+                                           df_samples,box_size,im_size,title=input_gene_or_guide+'_'+cell_selection_method);
     f.savefig('./'+input_gene_or_guide+'_'+cell_selection_method+'.png') 
     return 
 

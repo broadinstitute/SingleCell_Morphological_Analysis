@@ -41,7 +41,7 @@ def standardize_df_columns(sc_df,cp_features_analysis,scaling_method):
 
 
     sc_df_output = sc_df.copy()
-    sc_df_output.loc[:,cp_features_analysis]=scaler.fit_transform(sc_df.loc[:,cp_features_analysis].values)       
+    sc_df_output[cp_features_analysis]=scaler.fit_transform(sc_df.loc[:,cp_features_analysis].values)       
     
     return sc_df_output
 

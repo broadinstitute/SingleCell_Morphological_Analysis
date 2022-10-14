@@ -94,8 +94,10 @@ def transfection_detection_by_single_feature(df,params):
     """      
     if params['pre_detection_scaler']:
         #         clip target feature to its .999 percentile
-        qpi=df[params['intensity_feature_to_use']].quantile(0.999)
-        df[params['intensity_feature_to_use']]=df[params['intensity_feature_to_use']].clip(upper=qpi)
+        qpi_up=df[params['intensity_feature_to_use']].quantile(0.999)
+        qpi_low=df[params['intensity_feature_to_use']].quantile(0.01)
+
+        df[params['intensity_feature_to_use']]=df[params['intensity_feature_to_use']].clip(qpi_low, qpi_up)  
         
         if params['pre_detection_scaler']=='MinMax':
             pre_detection_scaler = sp.MinMaxScaler(feature_range=(0,1))

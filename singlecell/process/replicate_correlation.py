@@ -16,7 +16,7 @@ sns.set(rc={"lines.linewidth": 2})
 
 # from singlecell.process.replicate_correlation import replicate_null_corr_coefs
 
-def replicate_null_corr_coefs(inDf,pertColName,featColNames,plotEnabled,title=''):
+def replicate_null_corr_coefs(inDf,pertColName,featColNames,plotEnabled,title='',hist_bins=100):
     
     """ 
     Calculates replicate correlation versus across purtburtion correlations
@@ -81,8 +81,10 @@ def replicate_null_corr_coefs(inDf,pertColName,featColNames,plotEnabled,title=''
     if plotEnabled:
         sns.set(font_scale = 0.7)
         fig, axes = plt.subplots(figsize=(5,4))
-        sns.distplot(null_corr_ls,kde=True,hist=True,bins=100,label="random pairs",ax=axes,norm_hist=True);
-        sns.distplot(rep_corr_ls,kde=True,hist=True,bins=100,label="replicate pairs",ax=axes,norm_hist=True,color='r');   
+#         hist_bins=int(len(null_corr_ls)/10)
+#         print(hist_bins)
+        sns.distplot(null_corr_ls,kde=True,hist=True,bins=hist_bins,label="random pairs",ax=axes,norm_hist=True);
+        sns.distplot(rep_corr_ls,kde=True,hist=True,bins=hist_bins,label="replicate pairs",ax=axes,norm_hist=True,color='r');   
         #         perc5=np.percentile(repCC, 50);axes.axvline(x=perc5,linestyle=':',color='darkorange');
         axes.axvline(x=perc95,linestyle=':',label='Null 90th percentile');
         axes.axvline(x=rep10,linestyle=':',color='r',label='rep corr 10th percentile',markersize=2);
@@ -94,7 +96,10 @@ def replicate_null_corr_coefs(inDf,pertColName,featColNames,plotEnabled,title=''
     repCorrDf['Rep10Perc']=rep10
 #     highRepPertbs=repCorrDf[repCorrDf['RepCor']>perc95].index.tolist()
 #     return repCorrDf
-    return [null_corr_ls,rep_corr_ls,repCorrDf]
+    
+    return fig, repCorrDf
+    
+#     return null_corr_ls,rep_corr_ls,repCorrDf
 
 
 
