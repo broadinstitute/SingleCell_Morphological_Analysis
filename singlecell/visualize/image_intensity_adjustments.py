@@ -1,3 +1,7 @@
+import numpy as np
+import skimage
+
+
 def CP_to_RGB_single(im_cp):
     # change channels first to channels last format
     channel_first=False

@@ -63,7 +63,7 @@ def handle_nans(df_input, cp_features, thrsh_null_ratio=0.05, thrsh_std=0.0001, 
         print('after dropping nan rows: ',df_p_s.shape)
         
     elif fill_na_method=='interpolate_sim_col': #interpolate based on the columns with highest correlation
-        print('Mot implemented yet! Nothing got dropped! ')
+        print('Not implemented yet! Nothing got dropped! ')
 
     
 #     row_has_NaN = df_p_s[cp_features_analysis].isnull().any(axis=1)

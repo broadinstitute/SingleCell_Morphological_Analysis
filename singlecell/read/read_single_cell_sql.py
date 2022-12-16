@@ -19,6 +19,25 @@ from functools import reduce
 from ..preprocess import filter_out_edge_single_cells
 ################################################################################
 
+def readSingleCellData_connectorx(fileName,compartments):
+    import connectorx as cx
+    
+    sql_file="sqlite:////"+fileName
+    plateDf_list=[]
+    for compartment in compartments:
+        compartment_query = "select * from {}".format(compartment)
+        plateDf_list.append(cx.read_sql(sql_file,compartment_query))
+
+    plateDf = reduce(lambda left,right: pd.merge(left,right,on=["TableNumber", "ImageNumber", "ObjectNumber"]), plateDf_list)
+
+    compartment_query = "select * from {}".format("Image")
+    plateImageDf= pd.read_sql(sql_file,compartment_query);
+
+    plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])
+    plateDfwMeta = plateDfwMeta.loc[:,~plateDfwMeta.columns.duplicated()]
+    
+    return plateDfwMeta
+
 
 
 def readSingleCellData_sqlalch(fileName,compartments):
@@ -332,30 +351,38 @@ def readSingleCellData_sqlalch_wellAndObject_subset(fileName,wells,meta_well_col
     return plateDfwMeta   
 
 
-def readSingleCellData_sqlalch_features_subset(fileName,selected_feature):
-
+def readSingleCellData_sqlalch_features_subset(fileName,feature_list):
     start1 = time.time()
-    # selected_feature='Cells_RadialDistribution_MeanFrac_mito_tubeness_16of16'
-#     selected_feature='Cells_Intensity_IntegratedIntensity_DNA'
-    # f2='Cells_Intensity_IntegratedIntensity_DNA'
+
+    d={}
+    for f in feature_list:
+        comp=f.split("_")[0].lower()
+        if comp in d.keys():
+            d[comp]+=[f]
+        else:
+            d[comp]=[f]
+
     sql_file="sqlite:////"+fileName
     engine = create_engine(sql_file)
-    conn = engine.connect()
-    compartments=selected_feature.split("_")[0]
-    query_cols = "TableNumber, ImageNumber, "+selected_feature#+", "+f2
-    compartment_query = "select {} from {}".format(query_cols,compartments)
-    plateDf=pd.read_sql(sql=compartment_query, con=conn)
-    # del plateDf_list
-    #     plateDf = plateDf.loc[:,["TableNumber", "ImageNumber",selected_feature]]
-    plateDf=plateDf.dropna()
+    conn = engine.connect()        
 
+    compartments=list(d.keys())
+
+    plateDf_list=[]
+    for compartment in compartments:
+        features=', '.join(d[compartment])
+        query_cols = "TableNumber, ImageNumber, ObjectNumber, "+features#+", "+f2
+        compartment_query = "select {} from {}".format(query_cols,compartment)        
+        plateDf_list.append(pd.read_sql(sql=compartment_query, con=conn))            
+
+    plateDf = reduce(lambda left,right: pd.merge(left,right,\
+                                                 on=["TableNumber", "ImageNumber", "ObjectNumber"]), plateDf_list)
+#     plateDf=plateDf.dropna()
     img_query = "select * from {}".format("Image")
     plateImageDf= pd.read_sql(sql=img_query, con=conn);
 
-    # plateImageDf2=pd.merge(plateMap2, plateImageDf, on=["Metadata_Plate", "Metadata_Well"])
-    #     dmso_wells=plateMap2[plateMap2['Metadata_broad_sample']=='DMSO'];
-
-    plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])
+    plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])         
+    
 
     end1 = time.time()
     print('time elapsed:',(end1 - start1)/60, " mins")
