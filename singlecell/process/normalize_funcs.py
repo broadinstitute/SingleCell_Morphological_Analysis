@@ -30,7 +30,7 @@ def standardize_df_columns(sc_df,cp_features_analysis,scaling_method):
 
 
     if scaling_method=='MinMax':
-        scaler = sp.MinMaxScaler(feature_range=(0,1))
+        scaler = sp.MinMaxScaler(feature_range=(-1,1))
 
     elif scaling_method=='Robust':
         scaler = sp.RobustScaler()
