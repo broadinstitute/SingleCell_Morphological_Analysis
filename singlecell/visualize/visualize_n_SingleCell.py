@@ -57,7 +57,7 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
     halfBoxSize=int(boxSize/2);
 #     print(channels)
     
-    
+    plt.ioff()
     f, axarr = plt.subplots(sc_df.shape[0], len(channels),figsize=(len(channels)*2,sc_df.shape[0]*2));
     if len(title)>0:
         print(title)
@@ -113,8 +113,9 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
                 imD1=exposure.rescale_intensity(imD,in_range=(imD.min(),np.percentile(imD, 99.95)))#output is  unit16
 #                 and scaled to range 0,65535
                 clim_max=imD1.max()
+                imD2 = crop_single_cell_image(imD1,xCenterC,yCenterC,halfBoxSize)
         
-                imD2=imD1[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
+#                 imD2=imD1[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
 #                 print(imD1.min(),imD1.max())
 #                 print(np.squeeze(skimage.io.imread(imPath)).shape)
 #             axarr[index,cpi].imshow(imD,cmap='gray',clim=(0, maxRanges[c]));axarr[0,cpi].set_title(c);
@@ -135,7 +136,7 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
 #         print(imylabel)
         axarr[index,0].set_ylabel(imylabel);            
             
-
+    plt.ion()
     return f
 
 

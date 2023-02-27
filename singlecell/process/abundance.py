@@ -32,7 +32,7 @@ def abundance_rawFeature(inDf,groupingColumns,featureName,thrsh):
     abundanceRes (pandas df): as defined above
   
     """
-    abundanceRes=inDf.groupby([groupingColumns]).apply(lambda x: \
+    abundanceRes=inDf.groupby(groupingColumns).apply(lambda x: \
                     np.sum(x[featureName].values>=thrsh)/(x[featureName].shape[0])).reset_index();
     
     abundanceRes=abundanceRes.rename(columns={0: "Abundance"})
@@ -62,8 +62,11 @@ def abundance_classificationProbabiltyOutputs(inDf,groupingColumns,featureName,t
     abundanceRes (pandas df): as defined above
   
     """
-    abundanceResCon=df_T.groupby([groupingColumns]).apply(lambda x: \
-     np.sum(x[featureName]values>=thrsh)/np.sum((x[featureName].values>=thrsh)|(x[featureName].values<=1-thrsh))).reset_index();
+#     abundanceResCon=df_T.groupby([groupingColumns]).apply(lambda x: \
+#      np.sum(x[featureName]values>=thrsh)/np.sum((x[featureName].values>=thrsh)|(x[featureName].values<=1-thrsh))).reset_index();
+
+    abundanceResCon=df_T.groupby(['subject','label']).apply(lambda x: \
+                    np.sum(x.P1.values>=thrsh)/np.sum((x.P1.values>=thrsh)|(x.P1.values<=1-thrsh))).reset_index();
 
     abundanceRes=abundanceRes.rename(columns={0: "Abundance"})
     return abundanceRes

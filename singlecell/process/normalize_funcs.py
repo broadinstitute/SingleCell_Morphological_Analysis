@@ -69,3 +69,41 @@ def zscore_df_columns_by_control(sc_control_df, sc_df,cp_features_analysis,scali
     sc_df_output.loc[:,cp_features_analysis]=scaler.transform(sc_df.loc[:,cp_features_analysis])       
     
     return sc_df_output
+
+
+# zscore_df_columns_by_control_perPlate(sc_df,cp_features_analysis,scaling_method, ['X','negcon']):
+    
+def zscore_df_columns_by_control_perPlate(sc_df,cp_features_analysis,scaling_method,\
+                                          scale_per_col_indic, negcon_col_val):
+    '''
+    scaling method can be any method supported by sklearn package, ex. Robust, Standard, ..
+    negcon_col: [column_name, key_value for negcon]
+    '''
+    
+#     scaling_string = "scaler = sp."+scaling_method+"Scaler()"  
+#     exec(scaling_string)
+
+    if scaling_method=='MinMax':
+        scaler = sp.MinMaxScaler(feature_range=(0,1))
+
+    elif scaling_method=='Robust':
+        scaler = sp.RobustScaler()
+        
+    elif scaling_method=='Standard':
+        scaler = sp.StandardScaler()
+        
+    sc_df_output = sc_df.copy()
+    plates=sc_df[scale_per_col_indic].unique().tolist()
+    for p in plates:
+        sc_df_perts = sc_df_output.loc[(sc_df_output[scale_per_col_indic]==p) & \
+                                       (sc_df_output[negcon_col_val[0]]!=negcon_col_val[1]),:]
+        sc_df_control = sc_df_output.loc[(sc_df_output[scale_per_col_indic]==p) & \
+                                       (sc_df_output[negcon_col_val[0]]==negcon_col_val[1]),:]        
+        
+        scaler.fit(sc_df_control.loc[:,cp_features_analysis])
+        sc_df_output.loc[(sc_df_output[scale_per_col_indic]==p) & \
+                         (sc_df_output[negcon_col_val[0]]!=negcon_col_val[1]),cp_features_analysis]=\
+        scaler.transform(sc_df_perts.loc[:,cp_features_analysis])       
+    
+    return sc_df_output
+

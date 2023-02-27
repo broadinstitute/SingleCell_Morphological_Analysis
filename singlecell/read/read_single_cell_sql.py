@@ -380,7 +380,7 @@ def readSingleCellData_sqlalch_features_subset(fileName,feature_list):
 #     plateDf=plateDf.dropna()
     img_query = "select * from {}".format("Image")
     plateImageDf= pd.read_sql(sql=img_query, con=conn);
-
+#     print(plateImageDf.columns)
     plateDfwMeta = pd.merge(plateDf, plateImageDf, on=["TableNumber", "ImageNumber"])         
     
 
