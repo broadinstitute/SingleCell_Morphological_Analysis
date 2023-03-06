@@ -1,6 +1,4 @@
 """
-This script contains usefull functions used in the notebooks
-
 @author: mhaghigh
 """
 import pandas as pd
@@ -9,7 +7,6 @@ import seaborn as sns
 # from sklearn import preprocessing
 # import pickle
 import matplotlib.pyplot as plt
-# from imblearn.over_sampling import SMOTE,RandomOverSampler
 import os
 from functools import reduce
 from sklearn.cluster import KMeans
@@ -18,6 +15,9 @@ from skimage import exposure
 from skimage.transform import resize
 import skimage.io
 from skimage.segmentation import flood_fill
+from . import crop_cell
+from ..read import read_from_gallery
+# from . import read_im_gallery
 # from utils.read_data import *
 # from read_data import *
 
@@ -57,7 +57,7 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
     halfBoxSize=int(boxSize/2);
 #     print(channels)
     
-    plt.ioff()
+#     plt.ioff()
     f, axarr = plt.subplots(sc_df.shape[0], len(channels),figsize=(len(channels)*2,sc_df.shape[0]*2));
     if len(title)>0:
         print(title)
@@ -83,7 +83,8 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
 #                 print(imPath)
                 
                 if os.path.exists(imPath):
-                    imD2 = resize(skimage.io.imread(imPath),(im_size,im_size),\
+#                     imD2 = resize(skimage.io.imread(imPath),(im_size,im_size),\
+                    imD2 = resize(read_image_from_gallery(imPath),(im_size,im_size),\
                                  mode='constant',preserve_range=True,order=0).\
                 astype('uint8')[yCenter-halfBoxSize:yCenter+halfBoxSize,xCenter-halfBoxSize:xCenter+halfBoxSize]
                     
@@ -109,11 +110,15 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
 #                 print(yCenterC,xCenterC)
 #                 print(imPath)
 #                 print('im_size',np.squeeze(skimage.io.imread(imPath)).shape)
-                imD=np.squeeze(skimage.io.imread(imPath))
+
+#                 imD=np.squeeze(skimage.io.imread(imPath))
+                print(imPath)
+                imD=np.squeeze(read_image_from_gallery(imPath))
+
                 imD1=exposure.rescale_intensity(imD,in_range=(imD.min(),np.percentile(imD, 99.95)))#output is  unit16
 #                 and scaled to range 0,65535
                 clim_max=imD1.max()
-                imD2 = crop_single_cell_image(imD1,xCenterC,yCenterC,halfBoxSize)
+                imD2 = crop_cell.crop_single_cell_image(imD1,xCenterC,yCenterC,halfBoxSize)
         
 #                 imD2=imD1[yCenterC-halfBoxSize:yCenterC+halfBoxSize,xCenterC-halfBoxSize:xCenterC+halfBoxSize]
 #                 print(imD1.min(),imD1.max())
@@ -136,7 +141,7 @@ def visualize_n_SingleCell_pooled(channels,sc_df, boxSize, im_size, outline = Fa
 #         print(imylabel)
         axarr[index,0].set_ylabel(imylabel);            
             
-    plt.ion()
+#     plt.ion()
     return f
 
 
@@ -145,6 +150,7 @@ def form_image_y_label_string(sc_df,info_columns):
     image_y_label='\n'.join([str(sc_df[ic]) for ic in info_columns])
 
     return image_y_label
+
 
 
 
@@ -221,7 +227,7 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
             
 #             print(ch_pName+'/'+ch_fName)
             image=skimage.io.imread(ch_pName+'/'+ch_fName)
-            image_cropped = crop_single_cell_image(image,xCenter,yCenter,halfBoxSize)
+            image_cropped = crop_cell.crop_single_cell_image(image,xCenter,yCenter,halfBoxSize)
 #             print(image_cropped.shape,xCenter,yCenter)
            
             if 1:
@@ -253,8 +259,12 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
                 imD1=skimage.transform.resize(imD1,[compressed_im_size,compressed_im_size],\
                                               mode='constant',preserve_range=True,order=0) 
                 
-            outline_im = crop_single_cell_image(imD1,xCenter,yCenter,halfBoxSize)
-            axarr[index,columns_count-1].imshow(outline_im,cmap='gray');
+            outline_im = crop_cell.crop_single_cell_image(imD1,xCenter,yCenter,halfBoxSize)
+            mito_ch= np.squeeze(sc_collage_row[:,:,1])
+            
+            outline_im2=outline_im/outline_im.max() + mito_ch/mito_ch.max()
+            
+            axarr[index,columns_count-1].imshow(outline_im2,cmap='gray');
 #             axarr[index,columns_count-1].axes.xaxis.set_ticks([]);axarr[index,columns_count-1].axes.yaxis.set_ticks([]);
 
         for c in range(columns_count):  
@@ -266,138 +276,6 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
             
     return f
 
-
-def crop_single_cell_image(image, xCenter,yCenter,halfBoxSize):
-
-    im_h,im_w=image.shape;
-#     print(im_w,im_h)
-    before_y_pad=0
-    after_y_pad=0
-    before_x_pad=0
-    after_x_pad=0
-
-    if xCenter-halfBoxSize<0:
-        before_x_pad=abs(xCenter-halfBoxSize)
-
-    if yCenter-halfBoxSize<0:
-        before_y_pad=abs(yCenter-halfBoxSize)
-
-    if xCenter+halfBoxSize>im_w:
-        after_x_pad=abs(im_w-xCenter-halfBoxSize)
-
-    if yCenter+halfBoxSize>im_h:
-        after_y_pad=abs(im_h-yCenter-halfBoxSize)
-
-    image_cropped=image[np.maximum(yCenter-halfBoxSize,0):np.minimum(yCenter+halfBoxSize,im_h),\
-                        np.maximum(xCenter-halfBoxSize,0):np.minimum(xCenter+halfBoxSize,im_w)]
-#     print('image_cropped',image_cropped.shape)
-    if np.max([before_y_pad, after_y_pad,before_x_pad, after_x_pad])>0:
-        image_cropped=np.pad(image_cropped, ((before_y_pad, after_y_pad), (before_x_pad, after_x_pad)), 'minimum')
-#         print('image_cropped',image_cropped.shape)
-
-    return image_cropped
-    
-    
-
-    
-def scCPs_to_scIMs(channels , sc_df , boxSize , center_by='Nuclei_Location_Center', mask_cells = False ,\
-                   compressed=False,compressed_im_size=None):
-    """ 
-    This function takes a pandas dataframe of single cell profiles and forms/outputs an array of single cells
-  
-    Inputs: 
-    ++ sc_df   (pandas df) size --> (number of single cells)x(columns): 
-    input dataframe contains single cells profiles as rows (make sure it has "Nuclei_Location_Center_X"or"Y" columns)
-    
-    ++ channels (dtype: list): list of channels to be displayed as columns of output image
-           example: channels=['Mito','AGP','Brightfield','ER','DNA','Outline']
-        * If Outline exist in the list of channels; function reads the outline image address from 
-          "URL_CellOutlines" column of input dataframe, therefore, check that the addresses are correct
-           before inputing them to the function, and if not, modify before input!
-       
-    ++ boxSize (int): Height or Width of the square bounding box
-    ++ info_columns (list): are the columns containing info we want to add next to each single cell
-    Optional Inputs:
-    ++ compressed (bool) default is False,if set to True the next parameter is not optional anymore and should be provided
-    ++ compressed_im_size (int), for eaxample for lincs compressed is 1080
-    
-    Returns: 
-    im_arr (np array): dims-> n SCs , height , width , n CHs 
-  
-    """
-    
-    sc_df = sc_df.reset_index(drop=True)
-    
-    if compressed:
-        metadata_cols_4size = sc_df.columns[sc_df.columns.str.contains('Width|ImageSize')]
-        if len(metadata_cols_4size):
-            original_im_size=sc_df[metadata_cols_4size[0]].values[0]
-        else:
-            raise Exception("No metadata columns for inferring image size are detected! Please enter original_im_size here!")
-            
-#         original_im_size=sc_df['Image_Width_OrigDNA'].values[0]
-        #         compressed_im_size=1080;
-        compRatio=(compressed_im_size/original_im_size);
-        
-        sc_df[center_by + '_X']=sc_df[center_by + '_X']*compRatio
-        sc_df[center_by + '_Y']=sc_df[center_by + '_Y']*compRatio          
-
-    
-    halfBoxSize=int(boxSize/2);
-#     print(channels)
-    
-    rows_count=sc_df.shape[0]
-    
-    im_arr=np.zeros((rows_count,boxSize,boxSize,len(channels)))
-    
-    for index in range(rows_count):
-               
-        xCenter=int(sc_df.loc[index, center_by + '_X'])
-        yCenter=int(sc_df.loc[index, center_by + '_Y'])            
-        
-        for ci in range(len(channels)):
-       
-            ch_fName=sc_df.loc[index,'FileName_Orig'+channels[ci]];
-            ch_pName=sc_df.loc[index,'PathName_Orig'+channels[ci]];
-            
-#             print(ch_pName+'/'+ch_fName)
-            image=skimage.io.imread(ch_pName+'/'+ch_fName)
-            image_cropped = crop_single_cell_image(image,xCenter,yCenter,halfBoxSize)
-#             print(image.shape,image_cropped.shape,xCenter,yCenter)
-           
-            if 0:
-                image_cropped= exposure.rescale_intensity(image_cropped,in_range=(image.min(),np.percentile(image, 99.95)))
-           
-                
-            im_arr[index,:,:,ci]=image_cropped
-            
-        if mask_cells:
-            imPath=sc_df.loc[index,'Path_Outlines'];
-#             print(imPath,yCenter,xCenter)
-            imD1=skimage.io.imread(imPath)
-
-            cellMask1 = skimage.segmentation.flood_fill(imD1, (yCenter,xCenter), 1,connectivity=1)
-            cellMask1[cellMask1 != 1] = 0  
-            
-            if compressed: 
-                cellMask1 = skimage.transform.resize(cellMask1,\
-                            [compressed_im_size,compressed_im_size],\
-                            mode='constant',preserve_range=True,order=0).astype('uint8')
-                cellMask1[cellMask1 != 1] = 0 
-            
-
-            cellMask2=cellMask1[yCenter-halfBoxSize:yCenter+halfBoxSize,\
-                                xCenter-halfBoxSize:xCenter+halfBoxSize]                
-#             print(len(channels),cellMask2.shape,cellMask1.shape) #1 (400, 400) (1040, 1388)
-            
-            cellMask4=np.repeat(cellMask2[:,:,np.newaxis],len(channels),axis=2)
-#             print(cellMask4.shape,im_arr.shape,im_arr[index,:,:,:].shape) #(400, 400, 1) (100, 400, 400, 1)
-            im_arr[index,:,:,:]=np.multiply(cellMask4,im_arr[index,:,:,:])
-#             im_arr[index,:,:,:]=np.multiply(cellMask4,np.squeeze(im_arr[index,:,:,:], axis=0))           
-
-    return im_arr
-    
-    
 
 def CP_to_RGB_single(im_cp, channels):
     """ 
