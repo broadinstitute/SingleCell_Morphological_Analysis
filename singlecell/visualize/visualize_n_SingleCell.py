@@ -17,12 +17,6 @@ import skimage.io
 from skimage.segmentation import flood_fill
 from . import crop_cell
 from ..read import read_from_gallery
-# from . import read_im_gallery
-# from utils.read_data import *
-# from read_data import *
-
-
-# import skimage.io
 
 
 
