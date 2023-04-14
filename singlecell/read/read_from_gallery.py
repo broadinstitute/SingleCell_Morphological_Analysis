@@ -11,7 +11,6 @@ bucket_name = "cellpainting-gallery"
 compartments = ["cells", "cytoplasm", "nuclei"]
 
 
-
 def read_sqlite(file_name, wells_subset_param="all"):
 
     #     chunk_size = 1000000
@@ -107,9 +106,6 @@ def read_sqlite(file_name, wells_subset_param="all"):
 #     # concatenate the results of the processing into a final pandas dataframe
 #     df = pd.concat(df_ls)
 #     return df
-
-
-
 
 
 def read_parquet(file_name):

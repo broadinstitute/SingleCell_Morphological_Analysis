@@ -16,7 +16,9 @@ from skimage.transform import resize
 import skimage.io
 from skimage.segmentation import flood_fill
 from . import crop_cell
+from . import cp_to_rgb
 from ..read import read_from_gallery
+
 
 
 
@@ -237,7 +239,7 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
                 
         if color: 
 #             print('not available here yet')
-            color_im = CP_to_RGB_single(sc_collage_row[:,:,:len(channels)],channels)
+            color_im,_ = cp_to_rgb.CP_to_RGB_single(sc_collage_row[:,:,:len(channels)],channels)
 #             print(color_im.max(),color_im.min())
             axarr[index,c+1].imshow(color_im);
 #             axarr[index,c+1].axes.xaxis.set_ticks([]);axarr[index,c+1].axes.yaxis.set_ticks([]);
@@ -271,58 +273,58 @@ def visualize_n_SingleCell(channels , sc_df , boxSize , outline = False, color=F
     return f
 
 
-def CP_to_RGB_single(im_cp, channels):
-    """ 
-    This function takes a cell paiting image (as channels last array) and converts it to RGB 
+# def CP_to_RGB_single(im_cp, channels):
+#     """ 
+#     This function takes a cell paiting image (as channels last array) and converts it to RGB 
   
-    Inputs: 
-    ++ im_cp   (np array) size --> (width)x(height)x(channels): 
-    input dataframe contains single cells profiles as rows (make sure it has "Nuclei_Location_Center_X"or"Y" columns)
+#     Inputs: 
+#     ++ im_cp   (np array) size --> (width)x(height)x(channels): 
+#     input dataframe contains single cells profiles as rows (make sure it has "Nuclei_Location_Center_X"or"Y" columns)
     
-    ++ channels (dtype: list): list of channels to be displayed as columns of output image
-           example: channels=['Mito','AGP','Brightfield','ER','DNA','Outline']
+#     ++ channels (dtype: list): list of channels to be displayed as columns of output image
+#            example: channels=['Mito','AGP','Brightfield','ER','DNA','Outline']
     
-    Returns: 
-    colorImage0 (np array): dims-> width , height , 3 (RGB channels)
+#     Returns: 
+#     colorImage0 (np array): dims-> width , height , 3 (RGB channels)
   
-    """    
-    import matplotlib.colors as mcolors
-#     print(im_cp.max
-    # change channels first to channels last format
-#     im_cp = np.moveaxis(im_cp, 0, 2)
-#     col1 = np.array([0, 0, 255], dtype=np.float) #blue
-#     col2 = np.array([255, 0, 0], dtype=np.float) # red
-#     col3 = np.array([0, 255, 0], dtype=np.float) #lime
-#     col4 = np.array([255,255,0], dtype=np.float) # yellow
-#     col5 = np.array([255,0,255], dtype=np.float)#magneta
-#     channel_colors=[col1, col2 ,col3 ,col4 ,col5]
+#     """    
+#     import matplotlib.colors as mcolors
+# #     print(im_cp.max
+#     # change channels first to channels last format
+# #     im_cp = np.moveaxis(im_cp, 0, 2)
+# #     col1 = np.array([0, 0, 255], dtype=np.float) #blue
+# #     col2 = np.array([255, 0, 0], dtype=np.float) # red
+# #     col3 = np.array([0, 255, 0], dtype=np.float) #lime
+# #     col4 = np.array([255,255,0], dtype=np.float) # yellow
+# #     col5 = np.array([255,0,255], dtype=np.float)#magneta
+# #     channel_colors=[col1, col2 ,col3 ,col4 ,col5]
     
-    depth=255
-    # channels_colormap= {'DAPI':'Blue', 'ER'=Green, 'RNA'=Yellow, 'AGP':Red (or orange) 'Mito' = Magenta (or red)
-    channels_colormap= {'DNA':'Blue', 'ER':'Green', 'RNA':'Yellow', 'AGP':'Red', 'Mito':'Magenta',\
-                       'DAPI':'Blue'}
-    channel_colors = [np.array(mcolors.to_rgb(channels_colormap[c]))*depth for c in channels]
+#     depth=255
+#     # channels_colormap= {'DAPI':'Blue', 'ER'=Green, 'RNA'=Yellow, 'AGP':Red (or orange) 'Mito' = Magenta (or red)
+#     channels_colormap= {'DNA':'Blue', 'ER':'Green', 'RNA':'Yellow', 'AGP':'Red', 'Mito':'Magenta',\
+#                        'DAPI':'Blue'}
+#     channel_colors = [np.array(mcolors.to_rgb(channels_colormap[c]))*depth for c in channels]
     
 
-#     comb_pars=[3,2,3,2,2]
-#     comb_pars=[.1,.1,.1,.1,.1]
-    comb_pars = [1/im_cp.shape[2]]*im_cp.shape[2]
-    colorImagesList=[]
-    for i in range(im_cp.shape[2]):
-        image_gray=im_cp[:,:,i]
-        image_color=(skimage.color.gray2rgb(image_gray).astype(float)/depth) *channel_colors[i]*comb_pars[i]
-#         print('max',image_color.max(),image_gray.max(),image_color.shape)
-        colorImagesList.append(image_color)
+# #     comb_pars=[3,2,3,2,2]
+# #     comb_pars=[.1,.1,.1,.1,.1]
+#     comb_pars = [1/im_cp.shape[2]]*im_cp.shape[2]
+#     colorImagesList=[]
+#     for i in range(im_cp.shape[2]):
+#         image_gray=im_cp[:,:,i]
+#         image_color=(skimage.color.gray2rgb(image_gray).astype(float)/depth) *channel_colors[i]*comb_pars[i]
+# #         print('max',image_color.max(),image_gray.max(),image_color.shape)
+#         colorImagesList.append(image_color)
 
-    colorImage0=sum(colorImagesList).astype(np.uint8);
-#     print(colorImage0.shape)
-#     print(colorImage0.min(),colorImage0.max())
-#     for j in range(3):
-#         colorImage0[:,:,j]=normalize(colorImage0[:,:,j])
+#     colorImage0=sum(colorImagesList).astype(np.uint8);
+# #     print(colorImage0.shape)
+# #     print(colorImage0.min(),colorImage0.max())
+# #     for j in range(3):
+# #         colorImage0[:,:,j]=normalize(colorImage0[:,:,j])
 
-    colorImage0 = skimage.exposure.rescale_intensity(colorImage0,out_range=(0,depth)).astype(np.uint8)
+#     colorImage0 = skimage.exposure.rescale_intensity(colorImage0,out_range=(0,depth)).astype(np.uint8)
 
-    return colorImage0    
+#     return colorImage0    
     
     
 def normalize(img):

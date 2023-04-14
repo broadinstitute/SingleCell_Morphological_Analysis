@@ -54,7 +54,13 @@ def replicate_null_corr_coefs(
     highRepComp = repSizeDF[repSizeDF[0] > 1][pertColName].tolist()
 
     #     corr_mat_df=df.set_index([pertColName,'Metadata_Plate']).loc[:,featColNames].T.corr()
-    corr_mat_df = df.set_index(pertColName).loc[:, featColNames].T.corr()
+    # corr_mat_df = df.set_index(pertColName).loc[:, featColNames].T.corr()
+    corr_mat_df = (
+        df[df[pertColName].isin(highRepComp)]
+        .set_index(pertColName)
+        .loc[:, featColNames]
+        .T.corr()
+    )
 
     rep_corr_ls = []
     null_corr_ls = []
@@ -113,12 +119,16 @@ def replicate_null_corr_coefs(
             color="r",
         )
         #         perc5=np.percentile(repCC, 50);axes.axvline(x=perc5,linestyle=':',color='darkorange');
-        axes.axvline(x=perc95, linestyle=":", label="Null 90th percentile")
+        axes.axvline(
+            x=perc95,
+            linestyle=":",
+            label="Null 90th percentile ~ " + str(np.round(perc95, 3)),
+        )
         axes.axvline(
             x=rep10,
             linestyle=":",
             color="r",
-            label="rep corr 10th percentile",
+            label="rep corr 10th percentile ~ " + str(np.round(rep10, 3)),
             markersize=2,
         )
         axes.legend(loc=2, fontsize=8)
