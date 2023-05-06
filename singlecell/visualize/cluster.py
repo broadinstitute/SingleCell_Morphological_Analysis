@@ -377,3 +377,40 @@ def clusteringHists(DirsDict,wtANDmtDf_scaled,contLabel,d,nClus,feats2use,compar
                 plt.close('all')    
                 
     return
+
+
+def check_feature_similarity_dendrogram(data, feature_names, figsize):
+    
+    
+    from scipy.cluster import hierarchy
+    from scipy.spatial.distance import squareform
+#     import hdmedians as hd   
+    
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+#     corr = spearmanr(X).correlation
+    corr=data[feature_names].corr().values
+
+    # Ensure the correlation matrix is symmetric
+    corr = (corr + corr.T) / 2
+    np.fill_diagonal(corr, 1)
+
+    # We convert the correlation matrix to a distance matrix before performing
+    # hierarchical clustering using Ward's linkage.
+    distance_matrix = 1 - np.abs(corr)
+    dist_linkage = hierarchy.ward(squareform(distance_matrix))
+    dendro = hierarchy.dendrogram(
+        dist_linkage, labels=feature_names, ax=ax1, leaf_rotation=90
+    )
+    dendro_idx = np.arange(0, len(dendro["ivl"]))
+
+    pos = ax2.imshow(corr[dendro["leaves"], :][:, dendro["leaves"]],vmin=-1, vmax=1)
+    fig.colorbar(pos, ax=ax2)
+    ax2.set_xticks(dendro_idx)
+    ax2.set_yticks(dendro_idx)
+    ax2.set_xticklabels(dendro["ivl"], rotation="vertical")
+    ax2.set_yticklabels(dendro["ivl"])
+    fig.tight_layout()    
+    
+    return 
+    
