@@ -18,9 +18,9 @@ import pandas as pd
 import numpy as np
 import sklearn.preprocessing as sp
 
+
 # ---------------------------------------------------------------------------------
 def extract_singlecell_transfection_labels(df, transfection_params_dict):
-
     """
     This function performs a transfection detection method on the input dataframe
 
@@ -54,7 +54,6 @@ def extract_singlecell_transfection_labels(df, transfection_params_dict):
 
 
 def transfection_detection_by_single_feature(df, params):
-
     """ 
     This function performs a single feature thresholding based transfection detection on the input dataframe
     
@@ -114,7 +113,6 @@ def transfection_detection_by_single_feature(df, params):
             raise Exception("scaler is not among the list! please add it!")
 
     if params["thresholding_method"] == "precomputed_batch_specific_thrsh":
-
         precomputed_bottom_thresh, precomputed_top_thresh = params["precomputed_params"]
 
         if np.isnan(precomputed_bottom_thresh):
@@ -142,7 +140,6 @@ def transfection_detection_by_single_feature(df, params):
 
 
 def transfection_detection_by_clustering(df, params):
-
     """ 
     This function performs a single feature thresholding based transfection detection on the input dataframe
     

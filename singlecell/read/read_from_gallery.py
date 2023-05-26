@@ -12,7 +12,6 @@ compartments = ["cells", "cytoplasm", "nuclei"]
 
 
 def read_sqlite(file_name, wells_subset_param="all"):
-
     #     chunk_size = 1000000
     #     offset = 0
     #     while True:
@@ -28,7 +27,6 @@ def read_sqlite(file_name, wells_subset_param="all"):
     img_query = "select * from {}".format("Image")
 
     if wells != "all":
-
         wells, meta_well_col_str = wells_subset_param
         list_str = "('"
         for i in wells:
@@ -51,7 +49,6 @@ def read_sqlite(file_name, wells_subset_param="all"):
 
     plateDf_list = []
     for compartment in compartments:
-
         compartment_query = "select * from {}".format(compartment)
         if wells != "all":
             compartment_query = compartment_query + " WHERE {} IN {};".format(
@@ -109,10 +106,9 @@ def read_sqlite(file_name, wells_subset_param="all"):
 
 
 def read_parquet(file_name):
-
     # use the client to download the file to a temporary file object
     tmp = BytesIO()
-    s3.download_fileobj(bucket_name, file_name, tmp)
+    s3_client.download_fileobj(bucket_name, file_name, tmp)
 
     # read the file from the temporary file object into a pandas dataframe
     tmp.seek(0)
@@ -122,7 +118,6 @@ def read_parquet(file_name):
 
 
 def read_csv(path):
-
     data = s3_client.get_object(
         Bucket=bucket_name, Key=path
     )  # Key="/".join(image_url.split("/")[3:])
@@ -132,7 +127,6 @@ def read_csv(path):
 
 
 def read_csv_gzip(path):
-
     data = s3_client.get_object(
         Bucket=bucket_name, Key=path
     )  # Key="/".join(image_url.split("/")[3:])

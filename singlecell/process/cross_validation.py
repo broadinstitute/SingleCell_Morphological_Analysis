@@ -2,6 +2,9 @@
 @author: mhaghigh
 """
 
+import numpy as np
+from sklearn.model_selection import LeaveOneGroupOut
+
 
 def cross_validate(model, dataScaled, labels, groupsNum):
     """

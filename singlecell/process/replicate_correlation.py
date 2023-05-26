@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from random import sample, choices
 from scipy.stats import pearsonr
-import WeightedCorr
+# import WeightedCorr
+from wcorr import WeightedCorr
 import itertools as it
 
 # sns.set_style("whitegrid")

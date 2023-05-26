@@ -23,7 +23,15 @@ def extract_cpfeature_names(df_input):
         df_input.columns.str.contains("Cells_|Cytoplasm_|Nuclei_")
     ].tolist()
     locFeature2beremoved = list(
-        filter(lambda x: "_X_" in x or "_Y_" in x or "_Z_" in x or "_x_" in x or "_y_" in x or "_z_" in x, cp_features)
+        filter(
+            lambda x: "_X_" in x
+            or "_Y_" in x
+            or "_Z_" in x
+            or "_x_" in x
+            or "_y_" in x
+            or "_z_" in x,
+            cp_features,
+        )
     )
     metadataFeature2beremoved = list(filter(lambda x: "etadata" in x, cp_features))
 
