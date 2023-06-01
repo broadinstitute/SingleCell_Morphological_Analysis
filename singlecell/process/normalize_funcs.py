@@ -2,7 +2,7 @@
 @author: mhaghigh
 """
 import pandas as pd
-import sklearn.preprocessing as sp
+import sklearn.preprocessing as spr
 
 
 # def standardize_per_catX(df, column_name, cp_features):
@@ -43,13 +43,13 @@ def standardize_df_columns(sc_df, cp_features_analysis, scaling_method):
     #     scaler = sp.StandardScaler()
 
     if scaling_method == "MinMax":
-        scaler = sp.MinMaxScaler(feature_range=(-1, 1))
+        scaler = spr.MinMaxScaler(feature_range=(-1, 1))
 
     elif scaling_method == "Robust":
-        scaler = sp.RobustScaler()
+        scaler = spr.RobustScaler()
 
     elif scaling_method == "Standard":
-        scaler = sp.StandardScaler()
+        scaler = spr.StandardScaler()
 
     sc_df_output = sc_df.copy()
     sc_df_output[cp_features_analysis] = scaler.fit_transform(
@@ -71,13 +71,13 @@ def zscore_df_columns_by_control(
     #     exec(scaling_string)
 
     if scaling_method == "MinMax":
-        scaler = sp.MinMaxScaler(feature_range=(0, 1))
+        scaler = spr.MinMaxScaler(feature_range=(0, 1))
 
     elif scaling_method == "Robust":
-        scaler = sp.RobustScaler()
+        scaler = spr.RobustScaler()
 
     elif scaling_method == "Standard":
-        scaler = sp.StandardScaler()
+        scaler = spr.StandardScaler()
 
     sc_df_output = sc_df.copy()
     scaler.fit(sc_control_df.loc[:, cp_features_analysis])
@@ -103,13 +103,13 @@ def zscore_df_columns_by_control_perPlate(
     #     exec(scaling_string)
 
     if scaling_method == "MinMax":
-        scaler = sp.MinMaxScaler(feature_range=(0, 1))
+        scaler = spr.MinMaxScaler(feature_range=(0, 1))
 
     elif scaling_method == "Robust":
-        scaler = sp.RobustScaler()
+        scaler = spr.RobustScaler()
 
     elif scaling_method == "Standard":
-        scaler = sp.StandardScaler()
+        scaler = spr.StandardScaler()
 
     sc_df_output = sc_df.copy()
     plates = sc_df[scale_per_col_indic].unique().tolist()
