@@ -79,7 +79,7 @@ def subpopulation_clustering_visualization(
 
     sc_pert = sc_df[(sc_df["label"] == d)]["cluster_label"].values
     sc_control = sc_df[sc_df["label"] == contLabel]["cluster_label"].values
-    print(sc_pert)
+    # print(sc_pert)
 
     print("sc shapes pert/control: ", sc_pert.shape, sc_control.shape)
 
@@ -89,7 +89,7 @@ def subpopulation_clustering_visualization(
     histDiff = hist_pert - hist_control
 
     map_4ordered_clusters = dict(zip(np.argsort(histDiff), range(nClus)))
-    print(map_4ordered_clusters)
+    # print(map_4ordered_clusters)
     sc_df["clusterLabels2"] = sc_df["cluster_label"].map(map_4ordered_clusters)
 
     sc_pert = sc_df[~(sc_df["label"] == contLabel)]["clusterLabels2"].values

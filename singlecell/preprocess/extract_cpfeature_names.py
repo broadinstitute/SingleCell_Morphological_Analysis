@@ -24,12 +24,12 @@ def extract_cpfeature_names(df_input):
     ].tolist()
     locFeature2beremoved = list(
         filter(
-            lambda x: "_X_" in x
-            or "_Y_" in x
-            or "_Z_" in x
-            or "_x_" in x
-            or "_y_" in x
-            or "_z_" in x,
+            lambda x: "_X" in x
+            or "_Y" in x
+            or "_Z" in x
+            or "_x" in x
+            or "_y" in x
+            or "_z" in x,
             cp_features,
         )
     )

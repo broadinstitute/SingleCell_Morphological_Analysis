@@ -142,7 +142,7 @@ def replicate_null_corr_coefs(
     #     highRepPertbs=repCorrDf[repCorrDf['RepCor']>perc95].index.tolist()
     #     return repCorrDf
 
-    return fig, repCorrDf
+    return fig, repCorrDf, rep_corr_ls,null_corr_ls
 
 
 #     return null_corr_ls,rep_corr_ls,repCorrDf

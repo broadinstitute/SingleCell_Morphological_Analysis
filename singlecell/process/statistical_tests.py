@@ -13,6 +13,7 @@ def TwoSampleT2Test(X, Y):
     Sx = np.cov(X, rowvar=False)
     Sy = np.cov(Y, rowvar=False)
     S_pooled = ((nx - 1) * Sx + (ny - 1) * Sy) / (nx + ny - 2)
+    S_pooled = S_pooled + np.eye(S_pooled.shape[0]) * 1e-6
     t_squared = (
         (nx * ny)
         / (nx + ny)
@@ -22,16 +23,15 @@ def TwoSampleT2Test(X, Y):
     F = f(p, nx + ny - p - 1)
     p_value = 1 - F.cdf(statistic)
     #     print(f"Test statistic: {statistic}\nDegrees of freedom: {p} and {nx+ny-p-1}\np-value: {p_value}")
-
     return statistic, p_value
 
 
-from hotelling.stats import hotelling_t2
+# from hotelling.stats import hotelling_t2
 
 
-def TwoSampleT2Test_hotelling(X, Y):
-    dif_ctl_t, _, dif_ctl_p, _ = hotelling.stats.hotelling_t2(
-        per_site_df_pert_plate[uncorr_feats_condese], control_df[uncorr_feats_condese]
-    )
+# def TwoSampleT2Test_hotelling(X, Y):
+#     dif_ctl_t, _, dif_ctl_p, _ = hotelling.stats.hotelling_t2(
+#         per_site_df_pert_plate[uncorr_feats_condese], control_df[uncorr_feats_condese]
+#     )
 
-    return dif_ctl_t, dif_ctl_p
+#     return dif_ctl_t, dif_ctl_p
